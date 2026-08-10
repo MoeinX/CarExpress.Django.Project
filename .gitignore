@@ -1,0 +1,36 @@
+### Django ###
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+media/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# Pycharm
+.idea/
+
+# Vscode
+.vscode/
+
+# Environments
+.env
+.venv
+CLAUDE.md
+AGENTS.md
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
