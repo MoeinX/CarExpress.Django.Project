@@ -6,4 +6,4 @@ python manage.py migrate
 
 # Start server
 echo "Starting server..."
-gunicorn your_django_project.wsgi:application --bind 0.0.0.0:8000
+gunicorn CarExpress.wsgi:application --bind 0.0.0.0:8000
