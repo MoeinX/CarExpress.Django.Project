@@ -21,13 +21,8 @@ services:
       - ./Backend:/usr/src/app
     ports:
       - "8000:8000"
-    environment:
-      - DEBUG=1
-      - DB_HOST=db
-      - DB_NAME=carexpress
-      - DB_USER=postgres
-      - DB_PASSWORD=postgrespassword
-      - DB_PORT=5432
+    env_file:
+      - ./.env
     depends_on:
       - db
 
