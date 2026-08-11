@@ -18,8 +18,13 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-env_file = BASE_DIR.parent / ".env"
+env_file = BASE_DIR.parent.parent / ".env"
 load_dotenv(env_file, override=False)
+
+if env_file.exists():
+    print("var")
+else:
+    print("yox")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -29,7 +34,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.getenv("DEBUG")))
 
-ALLOWED_HOSTS = list(os.getenv("ALLOWED_HOSTS").split(","))
+# ALLOWED_HOSTS = list(os.getenv("ALLOWED_HOSTS").split(","))
+ALLOWED_HOSTS = ["*"]
 
 
 
