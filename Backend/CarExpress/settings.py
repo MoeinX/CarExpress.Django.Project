@@ -31,7 +31,7 @@ DEBUG = bool(int(os.getenv("DEBUG")))
 
 ALLOWED_HOSTS = list(os.getenv("ALLOWED_HOSTS").split(","))
 
-ALLOWED_HOSTS = []
+
 
 
 # Application definition
@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'CarExpress.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE'),
+        "ENGINE": "django.db.backends.postgresql",
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
@@ -115,7 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tehran'
 
 USE_I18N = True
 
