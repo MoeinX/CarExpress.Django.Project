@@ -1,45 +1,52 @@
 services:
   db:
     image: postgres:13-alpine
-    platform: linux/amd64  # <--- اضافه شد
     container_name: postgres_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    env_file:
-      - .env
+    restart: always
+    environment:
+      POSTGRES_DB: carexpress
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   backend:
-    platform: linux/amd64  # <--- اضافه شد
+    build: ./Backend
     container_name: django_api
-    build: ./backend
-    command: sh -c "/usr/src/app/entrypoint.sh"
+    restart: always
+    command: ./entrypoint.sh
     volumes:
-      - ./backend:/usr/src/app
+      - ./Backend:/usr/src/app
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+    environment:
+      - DEBUG=1
+      - DB_HOST=db
+      - DB_NAME=carexpress
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+      - DB_PORT=5432
     depends_on:
       - db
 
   frontend:
-    platform: linux/amd64  # <--- اضافه شد
+    build: ./Frontend
     container_name: react_app
-    build: ./frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    restart: always
     ports:
       - "3000:3000"
-    environment:
-      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
 
   proxy:
-    platform: linux/amd64  # <--- اضافه شد
-    container_name: nginx_proxy
     build: ./proxy
+    container_name: nginx_proxy
+    restart: always
     ports:
       - "80:80"
     depends_on:

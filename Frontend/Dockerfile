@@ -1,17 +1,16 @@
-# Base image for development
 FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and install dependencies
-COPY package.json ./
-COPY package-lock.json ./
+# ابتدا فایل‌های پکیج کپی می‌شوند
+COPY package*.json ./
+
+# نصب تمامی پکیج‌ها (شامل react-scripts یا vite)
 RUN npm install
 
-# Copy application files
+# کپی باقی‌مانده کدهای پروژه
 COPY . .
 
-# Expose port and start the development server
 EXPOSE 3000
+
 CMD ["npm", "start"]
