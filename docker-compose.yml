@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:13-alpine
     container_name: postgres_db
-    restart: always
+    restart: no
     environment:
       POSTGRES_DB: carexpress
       POSTGRES_USER: postgres
@@ -15,7 +15,7 @@ services:
   backend:
     build: ./Backend
     container_name: django_api
-    restart: always
+    restart: no
     command: ./entrypoint.sh
     volumes:
       - ./Backend:/usr/src/app
@@ -29,7 +29,7 @@ services:
   frontend:
     build: ./Frontend
     container_name: react_app
-    restart: always
+    restart: no
     ports:
       - "3000:3000"
     volumes:
@@ -41,7 +41,7 @@ services:
   proxy:
     build: ./proxy
     container_name: nginx_proxy
-    restart: always
+    restart: no
     ports:
       - "80:80"
     depends_on:
