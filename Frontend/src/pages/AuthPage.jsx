@@ -1,8 +1,10 @@
 // EDITED: Import axios for making HTTP requests and useEffect for potential initial checks.
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const AuthPage = ({ onLogin }) => {
+  const navigate = useNavigate();
   const [mode, setMode] = useState('login'); // 'login' or 'signup'
   const [step, setStep] = useState(1); // 1: Info, 2: OTP
   
@@ -11,7 +13,7 @@ const AuthPage = ({ onLogin }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [nationalId, setNationalId] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   // --- END EDITED SECTION ---
@@ -69,7 +71,8 @@ const AuthPage = ({ onLogin }) => {
       localStorage.setItem('refresh_token', response.data.refresh);
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
       
-      onLogin(true); // Notify the parent component that login was successful.
+      onLogin?.(true);
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.detail || 'The entered code is incorrect.');
     } finally {
@@ -85,7 +88,7 @@ const AuthPage = ({ onLogin }) => {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    if (value !== '' && index < 4) {
+    if (value !== '' && index < otp.length - 1) {
       inputRefs.current[index + 1].focus();
     }
   };
@@ -105,6 +108,8 @@ const AuthPage = ({ onLogin }) => {
     setLastName('');
     setNationalId('');
     setPhone('');
+    setOtp(['', '', '', '', '', '']);
+    setStep(1);
   };
 
 
@@ -116,7 +121,7 @@ const AuthPage = ({ onLogin }) => {
           {step === 2 ? 'تایید شماره' : mode === 'login' ? 'ورود' : 'ثبت نام'}
         </h2>
         <p className="text-center text-gray-500 dark:text-gray-400 mb-6 text-sm">
-          {step === 2 ? `کد ۵ رقمی به ${phone} ارسال شد` : 'به پلتفرم کار اکسپرس خوش آمدید'}
+          {step === 2 ? `کد ۶ رقمی به ${phone} ارسال شد` : 'به پلتفرم کار اکسپرس خوش آمدید'}
         </p>
         
         {/* EDITED: Display the error message if it exists */}
