@@ -11,6 +11,8 @@ class InquiryAdmin(admin.ModelAdmin):
         "manufacturing_year",
         "requester_name",
         "contact_number",
+        "delivery_status",
+        "delivery_progress",
     )
     search_fields = (
         "name",
@@ -20,4 +22,10 @@ class InquiryAdmin(admin.ModelAdmin):
         "contact_number",
         "email",
     )
-    list_filter = ("transmission", "manufacturing_year", "color")
+    list_filter = (
+        "delivery_status",
+        "transmission",
+        "manufacturing_year",
+        "color",
+    )
+    readonly_fields = ("created_at", "updated_at")
