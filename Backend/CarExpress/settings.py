@@ -42,7 +42,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # third-party modules
     'rest_framework',
+    'rest_framework_simplejwt',
+
+    # apps
     'accounts.apps.AccountsConfig',
     'inquiries.apps.InquiriesConfig',
 ]
