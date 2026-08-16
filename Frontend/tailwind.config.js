@@ -1,27 +1,27 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
-    "./public/index.html"
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        navyDeep: '#0a111e',
-        navyCard: '#121c2d',
-        electricOrange: '#ff5500',
-        electricOrangeHover: '#e04b00',
-
-        darkBg: '#131b26',
-        darkCard: '#1a2432',
-        accentBlue: '#00a3e0',
+        // این خط ارور bg-navyDeep را برای همیشه حل می‌کند
+        navyDeep: '#1A223E', 
+        
+        brand: {
+          red: '#E31837',     // قرمز تند
+          orange: '#FF8C00',  // نارنجی زنده
+          slate: '#333F4A',   // خاکستری تیره
+          light: '#F5F7FA',   // خاکستری روشن
+        }
       },
-      boxShadow: {
-        'neo-flat': '6px 6px 12px #0f151e, -6px -6px 12px #17212e',
-        'neo-pressed': 'inset 4px 4px 8px #0f151e, inset -4px -4px 8px #17212e',
-        'neo-btn': '4px 4px 10px #0e141c, -4px -4px 10px #182230',
-      }
+      fontFamily: {
+        vazir: ['Vazirmatn', 'sans-serif'],
+        outfit: ['Outfit', 'sans-serif'],
+      },
     },
   },
   plugins: [],

@@ -1,13 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Vazirmatn:wght@400;500;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 transition-colors duration-300;
+    /* اضافه شدن فونت پیش‌فرض و جهت راست‌به‌چپ */
+    @apply font-['Vazirmatn'] bg-slate-50 text-slate-900 transition-colors duration-300;
+    direction: rtl;
   }
   
   html.dark body {
+    /* اکنون bg-navyDeep بدون ارور کار خواهد کرد */
     @apply bg-navyDeep text-slate-100;
+  }
+}
+
+@layer utilities {
+  /* کلاس کمکی برای متون و اعداد انگلیسی در سراسر پروژه */
+  .font-en {
+    @apply font-['Outfit'] tracking-wide;
   }
 }
