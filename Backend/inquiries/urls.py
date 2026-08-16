@@ -1,5 +1,9 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = [
+from .views import InquiryViewSet
 
-]
+
+router = DefaultRouter()
+router.register("", InquiryViewSet, basename="inquiry")
+
+urlpatterns = router.urls
