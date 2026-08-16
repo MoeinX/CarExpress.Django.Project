@@ -1,235 +1,151 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import api, { getApiError } from '../api';
+import ThemeToggle from '../components/ThemeToggle';
+
 const TrackingPage = () => {
   const navigate = useNavigate();
-  const [vinQuery, setVinQuery] = useState('');
-  const [trackingData, setTrackingData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [trackingCode, setTrackingCode] = useState('');
+  const [shipment, setShipment] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // مراحل استاندارد استاتوس بار
-  const steps = [
-    { title: "تایید مدارک و RTA", desc: "دفتر امارات" },
-    { title: "ورود به بندر مبدأ", desc: "شارجه / دبی" },
-    { title: "ترخیص و بارگیری", desc: "کشتی و لنج" },
-    { title: "در مسیر دریایی", desc: "خلیج فارس" },
-    { title: "ورود به گمرک", desc: "بندرعباس / لنگه" },
-    { title: "انتقال با خودروبر", desc: "به سمت منطقه آزاد" },
-    { title: "پارک در پارکینگ", desc: "تحویل نهایی" }
-  ];
+  const handleSearch = async (event) => {
+    event.preventDefault();
+    const code = trackingCode.trim();
+    if (!code) return;
 
-  // دیتای تستی برای شبیه‌سازی استعلام شماره شاسی
-  const mockVehicles = {
-    'TRQ-8902': {
-      carModel: 'Toyota Camry 2024',
-      color: 'سفید صدفی',
-      origin: 'بندر شارجه (پورت خالد)',
-      destination: 'منطقه آزاد کیش',
-      currentStep: 3, // در مسیر دریایی
-      estimatedArrival: '۴۸ ساعت کاری دیگر',
-      lastUpdate: 'امروز، ساعت ۱۴:۳۰'
-    },
-    'FER-1090': {
-      carModel: 'Ferrari SF90 Stradale',
-      color: 'قرمز متالیک',
-      origin: 'دبی (جبل علی)',
-      destination: 'تهران (گمرک غرب)',
-      currentStep: 1, // ورود به بندر مبدأ
-      estimatedArrival: '۵ روز کاری دیگر',
-      lastUpdate: 'امروز، ساعت ۱۱:۰۰'
+    setLoading(true);
+    setError('');
+    setShipment(null);
+    try {
+      const response = await api.get(`/tracking/${encodeURIComponent(code)}/`);
+      setShipment(response.data);
+    } catch (requestError) {
+      if (requestError?.response?.status === 404) {
+        setError('کد پیگیری پیدا نشد یا پرونده غیرفعال است.');
+      } else {
+        setError(getApiError(requestError));
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!vinQuery.trim()) return;
-
-    setIsLoading(true);
-    setErrorMsg('');
-    setTrackingData(null);
-
-    // شبیه‌سازی دریافت دیتا از بک‌اند جنگو
-    setTimeout(() => {
-      setIsLoading(false);
-      const formattedVin = vinQuery.trim().toUpperCase();
-      if (mockVehicles[formattedVin]) {
-        setTrackingData({ vin: formattedVin, ...mockVehicles[formattedVin] });
-      } else {
-        // برای هر شماره شاسی جدیدی که تست کنید یک وضعیت رندوم و پیش‌فرض لود می‌کند
-        setTrackingData({
-          vin: formattedVin,
-          carModel: 'Mercedes-Benz S500',
-          color: 'مشکی متالیک',
-          origin: 'بندر شارجه',
-          destination: 'منطقه آزاد انزلی',
-          currentStep: 2,
-          estimatedArrival: '۳ روز دیگر',
-          lastUpdate: 'یک ساعت پیش'
-        });
-      }
-    }, 700);
-  };
-
-  const glassStyle = "bg-white/80 dark:bg-[#333F4A]/70 backdrop-blur-2xl border border-white/50 dark:border-gray-600/40 shadow-2xl rounded-3xl p-8 transition-all duration-500";
+  const steps = shipment?.steps || [];
+  const currentIndex = steps.findIndex((step) => step.status === 'current');
+  const lastCompletedIndex = steps.reduce(
+    (lastIndex, step, index) => step.status === 'completed' ? index : lastIndex,
+    -1
+  );
+  const displayIndex = currentIndex >= 0 ? currentIndex : lastCompletedIndex;
+  const progressWidth = steps.length > 1
+    ? `${(Math.max(displayIndex, 0) / (steps.length - 1)) * 92}%`
+    : displayIndex === 0 ? '92%' : '0%';
+  const glass = 'rounded-3xl border border-white/50 bg-white/80 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-gray-600/40 dark:bg-[#333F4A]/70 md:p-8';
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] dark:bg-navyDeep font-['Vazirmatn'] transition-colors duration-500 pt-28 pb-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        
-        {/* هدر صفحه */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FF8C00]/10 border border-[#FF8C00]/20 text-[#FF8C00] font-bold text-xs mb-4">
-            <span className="w-2 h-2 rounded-full bg-[#FF8C00] animate-pulse"></span>
+    <main className="min-h-screen bg-[#F5F7FA] px-4 pb-20 pt-8 transition-colors duration-500 dark:bg-navyDeep sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-10 flex items-center justify-between">
+          <button onClick={() => navigate('/')} className="font-outfit text-2xl font-extrabold text-[#333F4A] dark:text-white">
+            Car<span className="text-[#FF8C00]">Express</span>
+          </button>
+          <div className="flex gap-2">
+            <ThemeToggle />
+            <button onClick={() => navigate('/admin-panel')} className="rounded-xl bg-[#333F4A] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#E31837]">
+              پنل مدیریت
+            </button>
+          </div>
+        </div>
+
+        <header className="mx-auto mb-10 max-w-2xl text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#FF8C00]/20 bg-[#FF8C00]/10 px-4 py-1.5 text-xs font-bold text-[#FF8C00]">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF8C00]" />
             سامانه رهگیری لحظه‌ای کار اکسپرس
           </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold text-[#333F4A] dark:text-white tracking-tight mb-4">
-            استعلام و پیگیری <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF8C00] to-[#E31837]">وضعیت حمل خودرو</span>
+          <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-[#333F4A] dark:text-white md:text-5xl">
+            پیگیری <span className="bg-gradient-to-r from-[#FF8C00] to-[#E31837] bg-clip-text text-transparent">حمل خودرو</span>
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-            شماره شاسی (VIN) یا کد پیگیری اختصاصی پرونده خود را جهت مشاهده نوار وضعیت بارگیری، ترخیص و انتقال وارد کنید.
+          <p className="text-sm leading-7 text-gray-600 dark:text-gray-300">
+            شماره شاسی یا کد پیگیری پرونده را وارد کنید تا آخرین مراحل ثبت‌شده توسط مدیریت را ببینید.
           </p>
-        </div>
+        </header>
 
-        {/* باکس ورودی شماره شاسی (Glassmorphic Search Bar) */}
-        <div className={`${glassStyle} max-w-2xl mx-auto mb-12 !p-4 md:!p-6`}>
-          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-center gap-3">
-            <div className="relative w-full">
-              <input
-                type="text"
-                dir="ltr"
-                placeholder="مثال: TRQ-8902 یا کد VIN"
-                value={vinQuery}
-                onChange={(e) => setVinQuery(e.target.value)}
-                className="w-full px-5 py-3.5 bg-gray-50 dark:bg-navyDeep/80 border border-gray-200 dark:border-gray-600 rounded-2xl text-slate-800 dark:text-white font-['Outfit'] font-bold text-lg tracking-wider placeholder:font-['Vazirmatn'] placeholder:text-sm placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#FF8C00] focus:ring-2 focus:ring-[#FF8C00]/20 transition-all"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full sm:w-auto shrink-0 bg-[#FF8C00] hover:bg-[#E31837] text-white px-8 py-3.5 rounded-2xl font-bold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-[#FF8C00]/30 hover:shadow-[#E31837]/40"
-            >
-              {isLoading ? (
-                <span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              ) : (
-                <>
-                  <span>استعلام وضعیت</span>
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                    <path fillRule="evenodd" d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z" clipRule="evenodd" />
-                  </svg>
-                </>
-              )}
+        <section className={`${glass} mx-auto mb-10 max-w-2xl !p-4 md:!p-6`}>
+          <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row">
+            <input
+              value={trackingCode}
+              onChange={(event) => setTrackingCode(event.target.value)}
+              dir="ltr"
+              placeholder="TRQ-8902 یا VIN"
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-3.5 font-outfit text-lg font-bold tracking-wider text-slate-800 outline-none transition focus:border-[#FF8C00] focus:ring-2 focus:ring-[#FF8C00]/20 dark:border-gray-600 dark:bg-navyDeep/80 dark:text-white"
+            />
+            <button disabled={loading} className="shrink-0 rounded-2xl bg-[#FF8C00] px-8 py-3.5 font-bold text-white shadow-lg shadow-[#FF8C00]/30 transition hover:bg-[#E31837] disabled:opacity-60">
+              {loading ? 'در حال بررسی...' : 'استعلام وضعیت'}
             </button>
           </form>
-          
-          <div className="flex justify-center gap-4 mt-3 text-xs text-gray-400">
-            <span>شماره‌های تستی:</span>
-            <button type="button" onClick={() => setVinQuery('TRQ-8902')} className="text-[#FF8C00] font-['Outfit'] underline hover:text-[#E31837]">TRQ-8902</button>
-            <button type="button" onClick={() => setVinQuery('FER-1090')} className="text-[#FF8C00] font-['Outfit'] underline hover:text-[#E31837]">FER-1090</button>
-          </div>
-        </div>
+          {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600 dark:bg-red-950/30">{error}</p>}
+        </section>
 
-        {/* کارت نمایش Status Bar و جزئیات */}
-        {trackingData && (
-          <div className={`${glassStyle} animate-fadeIn`}>
-            
-            {/* اطلاعات خلاصه بالای کارت */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 dark:border-gray-700 pb-6 mb-8">
+        {shipment && (
+          <section className={glass}>
+            <div className="mb-8 flex flex-col justify-between gap-4 border-b border-gray-200 pb-6 dark:border-gray-700 md:flex-row md:items-center">
               <div>
-                <span className="text-xs text-gray-400 block mb-1">خودروی در حال ترانزیت:</span>
-                <h2 className="text-2xl font-extrabold text-[#333F4A] dark:text-white font-['Outfit']">
-                  {trackingData.carModel}
-                </h2>
-                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  <span>شماره شاسی: <strong className="font-['Outfit'] text-slate-800 dark:text-gray-200">{trackingData.vin}</strong></span>
-                  <span>•</span>
-                  <span>رنگ: <strong className="text-slate-800 dark:text-gray-200">{trackingData.color}</strong></span>
+                <span className="mb-1 block text-xs text-gray-400">خودروی در حال ترانزیت</span>
+                <h2 className="font-outfit text-2xl font-extrabold text-[#333F4A] dark:text-white">{shipment.car_model}</h2>
+                <div className="mt-2 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
+                  <span>کد پیگیری: <strong className="font-outfit text-slate-800 dark:text-gray-200">{shipment.tracking_code}</strong></span>
+                  {shipment.color && <span>رنگ: <strong className="text-slate-800 dark:text-gray-200">{shipment.color}</strong></span>}
                 </div>
               </div>
-
-              <div className="bg-[#FF8C00]/10 border border-[#FF8C00]/30 rounded-2xl px-5 py-3 text-right">
-                <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">وضعیت کنونی:</span>
-                <div className="text-base font-bold text-[#FF8C00] flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#FF8C00] animate-ping"></span>
-                  {steps[trackingData.currentStep].title}
-                </div>
+              <div className="rounded-2xl border border-[#FF8C00]/30 bg-[#FF8C00]/10 px-5 py-3">
+                <span className="mb-1 block text-xs text-gray-500 dark:text-gray-400">وضعیت کنونی</span>
+                <strong className="text-[#FF8C00]">{shipment.current_step?.title || 'هنوز مرحله‌ای ثبت نشده'}</strong>
               </div>
             </div>
 
-            {/* نوار پیشرفت افقی (Status Bar) */}
-            <div className="relative py-8 my-4 overflow-x-auto">
-              <div className="min-w-[650px] relative px-4">
-                
-                {/* خط خاکستری پس‌زمینه */}
-                <div className="absolute top-7 right-8 left-8 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full z-0"></div>
-                
-                {/* خط رنگی پیشرفت */}
-                <div 
-                  className="absolute top-7 right-8 h-1.5 bg-gradient-to-l from-[#FF8C00] to-[#E31837] rounded-full z-0 transition-all duration-1000 ease-out shadow-md shadow-[#FF8C00]/40"
-                  style={{ width: `${(trackingData.currentStep / (steps.length - 1)) * 92}%` }}
-                ></div>
-
-                {/* دایره‌ها و مراحل */}
-                <div className="relative z-10 flex justify-between">
-                  {steps.map((step, index) => {
-                    const isCompleted = index < trackingData.currentStep;
-                    const isCurrent = index === trackingData.currentStep;
-
-                    return (
-                      <div key={index} className="flex flex-col items-center text-center w-24">
-                        <div 
-                          className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm font-['Outfit'] transition-all duration-500 mb-3 ${
-                            isCurrent
-                              ? 'bg-[#FF8C00] text-white ring-4 ring-[#FF8C00]/30 scale-110 shadow-lg shadow-[#FF8C00]/50'
-                              : isCompleted
-                              ? 'bg-[#E31837] text-white'
-                              : 'bg-white dark:bg-gray-800 text-gray-400 border-2 border-gray-200 dark:border-gray-700'
-                          }`}
-                        >
-                          {isCompleted ? '✓' : index + 1}
+            {steps.length > 0 ? (
+              <div className="my-4 overflow-x-auto py-8">
+                <div className="relative min-w-[650px] px-4">
+                  <div className="absolute left-8 right-8 top-7 z-0 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700" />
+                  <div className="absolute right-8 top-7 z-0 h-1.5 rounded-full bg-gradient-to-l from-[#FF8C00] to-[#E31837] transition-all duration-700" style={{ width: progressWidth }} />
+                  <div className="relative z-10 flex justify-between">
+                    {steps.map((step, index) => {
+                      const completed = step.status === 'completed';
+                      const current = step.status === 'current';
+                      return (
+                        <div key={step.id} className="flex w-24 flex-col items-center text-center">
+                          <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full font-outfit text-sm font-bold transition ${
+                            current ? 'scale-110 bg-[#FF8C00] text-white ring-4 ring-[#FF8C00]/30' :
+                            completed ? 'bg-[#E31837] text-white' :
+                            'border-2 border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-800'
+                          }`}>
+                            {completed ? '✓' : index + 1}
+                          </div>
+                          <h3 className={`mb-1 text-xs font-bold ${current ? 'text-[#FF8C00]' : completed ? 'text-[#333F4A] dark:text-white' : 'text-gray-400'}`}>{step.title}</h3>
+                          <span className="text-[10px] text-gray-400">{step.description}</span>
                         </div>
-
-                        <h4 className={`text-xs font-bold mb-1 ${
-                          isCurrent ? 'text-[#FF8C00]' : isCompleted ? 'text-[#333F4A] dark:text-white' : 'text-gray-400'
-                        }`}>
-                          {step.title}
-                        </h4>
-                        <span className="text-[10px] text-gray-400">{step.desc}</span>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-
               </div>
+            ) : (
+              <p className="rounded-2xl bg-gray-50 p-6 text-center text-sm text-gray-500 dark:bg-navyDeep/40">هنوز مرحله‌ای برای این پرونده ثبت نشده است.</p>
+            )}
+
+            <div className="mt-8 grid gap-4 rounded-2xl bg-gray-50/70 p-6 dark:bg-navyDeep/40 md:grid-cols-3">
+              <div><span className="mb-1 block text-xs text-gray-400">مبدأ</span><strong className="text-sm text-[#333F4A] dark:text-white">{shipment.origin}</strong></div>
+              <div><span className="mb-1 block text-xs text-gray-400">مقصد</span><strong className="text-sm text-[#333F4A] dark:text-white">{shipment.destination}</strong></div>
+              <div><span className="mb-1 block text-xs text-gray-400">تخمین تحویل</span><strong className="text-sm text-[#FF8C00]">{shipment.estimated_arrival || 'در حال بررسی'}</strong></div>
             </div>
-
-            {/* کارت اطلاعات زمان‌بندی و موقعیت لحظه‌ای */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-navyDeep/40 p-6 rounded-2xl">
-              <div>
-                <span className="text-xs text-gray-400 block mb-1">مبدأ و مقصد:</span>
-                <p className="text-sm font-bold text-[#333F4A] dark:text-white">
-                  از {trackingData.origin} به مقصد {trackingData.destination}
-                </p>
-              </div>
-              <div>
-                <span className="text-xs text-gray-400 block mb-1">تخمین تحویل نهایی:</span>
-                <p className="text-sm font-bold text-[#FF8C00] font-['Outfit']">
-                  {trackingData.estimatedArrival}
-                </p>
-              </div>
-              <div>
-                <span className="text-xs text-gray-400 block mb-1">آخرین به‌روزرسانی سیستم:</span>
-                <p className="text-sm font-bold text-gray-600 dark:text-gray-300">
-                  {trackingData.lastUpdate}
-                </p>
-              </div>
-            </div>
-
-          </div>
+            {shipment.customer_note && <p className="mt-4 rounded-2xl border border-[#FF8C00]/20 bg-[#FF8C00]/5 p-4 text-sm text-gray-600 dark:text-gray-300">{shipment.customer_note}</p>}
+          </section>
         )}
-
       </div>
-    </div>
+    </main>
   );
 };
 
