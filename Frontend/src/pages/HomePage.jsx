@@ -51,7 +51,7 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-[#F5F7FA] dark:bg-navyDeep font-['Vazirmatn'] transition-colors duration-500 overflow-x-hidden">
       
-      {/* ----------------- نوبار رسمی با آیکون‌های Solid ----------------- */}
+      {/* ----------------- نوبار رسمی با آیکون‌های Solid و دکمه پیگیری ----------------- */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'py-4' : 'py-6'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`flex justify-between items-center px-6 py-4 rounded-2xl transition-all ${isScrolled ? 'bg-white/90 dark:bg-navyDeep/90 backdrop-blur-md shadow-lg border border-gray-200 dark:border-gray-700' : 'bg-white/10 backdrop-blur-sm border border-white/20'}`}>
@@ -63,11 +63,18 @@ const HomePage = () => {
             </div>
             
             <div className="hidden md:flex space-x-8 space-x-reverse items-center">
-              <button className={`flex items-center gap-2 font-bold transition-colors ${isScrolled ? 'text-[#333F4A] dark:text-white' : 'text-white'}`}>
+              <button onClick={() => navigate('/')} className={`flex items-center gap-2 font-bold transition-colors ${isScrolled ? 'text-[#333F4A] dark:text-white' : 'text-white'}`}>
                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
                   <path d="M11.47 3.84a.75.75 0 011.06 0l8.99 8.99a.75.75 0 01-1.06 1.06l-1.52-1.52V20a.75.75 0 01-.75.75h-4.5a.75.75 0 01-.75-.75v-4.5h-3v4.5a.75.75 0 01-.75.75H4.69a.75.75 0 01-.75-.75v-7.63l-1.52 1.52a.75.75 0 01-1.06-1.06l8.99-8.99z" />
                 </svg>
                 صفحه اصلی
+              </button>
+
+              <button onClick={() => navigate('/tracking')} className={`flex items-center gap-2 font-medium transition-colors hover:text-[#FF8C00] ${isScrolled ? 'text-gray-600 dark:text-gray-300' : 'text-gray-200'}`}>
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                  <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                </svg>
+                پیگیری خودرو
               </button>
               
               <button className={`flex items-center gap-2 font-medium transition-colors hover:text-[#FF8C00] ${isScrolled ? 'text-gray-600 dark:text-gray-300' : 'text-gray-200'}`}>
@@ -75,13 +82,6 @@ const HomePage = () => {
                   <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
                 </svg>
                 درباره ما
-              </button>
-              
-              <button className={`flex items-center gap-2 font-medium transition-colors hover:text-[#FF8C00] ${isScrolled ? 'text-gray-600 dark:text-gray-300' : 'text-gray-200'}`}>
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                  <path fillRule="evenodd" d="M1.5 4.5a3 3 0 013-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 01-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 006.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 011.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 01-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5z" clipRule="evenodd" />
-                </svg>
-                ارتباط با ما
               </button>
             </div>
             
@@ -102,16 +102,15 @@ const HomePage = () => {
 
       {/* ----------------- هیرو سکشن مینیمال با عکس PNG شناور و لایه عنوان زیر عکس ----------------- */}
       <section className="relative h-[75vh] min-h-[600px] flex items-center justify-center overflow-hidden group">
-        {/* پس‌زمینه با افکت تار شدن حین هاور */}
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1503376760302-86f7b19a770a?q=80&w=2000')] bg-cover bg-center transition-all duration-700 group-hover:blur-md group-hover:scale-105"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-navyDeep/80 via-navyDeep/50 to-[#F5F7FA] dark:to-navyDeep"></div>
 
-        {/* عکس ماشین PNG که از کنار صفحه آمده و بخشی از عنوان روی آن می‌افتد */}
+        {/* عکس ماشین PNG شناور */}
         <div className="absolute right-[-10%] md:right-[5%] bottom-10 z-10 w-[70%] md:w-[50%] pointer-events-none transition-transform duration-700 group-hover:scale-105 opacity-90">
           <img src="https://www.pngarts.com/files/3/Luxury-Car-PNG-High-Quality-Image.png" alt="Luxury Car PNG" className="w-full object-contain drop-shadow-2xl" />
         </div>
         
-        {/* متن‌ها که بخشی از آن پشت عکس قرار می‌گیرد و توضیحات در زیر آن است */}
+        {/* متن‌ها */}
         <div className="relative z-20 text-center max-w-4xl mx-auto px-4 mt-10">
           <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight drop-shadow-2xl">
             پیشرو در ترانزیت هوشمند <br />
@@ -147,7 +146,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ----------------- بخش ویژگی‌ها (کمتر شده و بسیار خلوت) ----------------- */}
+      {/* ----------------- بخش ویژگی‌ها ----------------- */}
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-extrabold text-[#333F4A] dark:text-white mb-3">چرا کار اکسپرس؟</h2>
@@ -209,7 +208,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ----------------- نظرات کاربران (خلوت و شیک) ----------------- */}
+      {/* ----------------- نظرات کاربران ----------------- */}
       <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-extrabold text-[#333F4A] dark:text-white mb-3">دیدگاه مشتریان</h2>
