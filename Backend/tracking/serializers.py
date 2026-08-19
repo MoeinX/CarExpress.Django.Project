@@ -44,6 +44,7 @@ class ShipmentSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "tracking_code",
+            "customer_name",
             "car_brand",
             "car_model",
             "build_year",

@@ -27,10 +27,10 @@ const CAR_CATALOG = {
   Maserati: ['Ghibli', 'Quattroporte', 'Levante', 'Grecale', 'MC20'],
 };
 
-const EMPTY_FORM = { tracking_code: '', car_brand: '', car_model: '', build_year: '', color: '', origin: '', destination: '', estimated_arrival: '', customer_note: '', is_active: true };
+const EMPTY_FORM = { tracking_code: '', customer_name: '', car_brand: '', car_model: '', build_year: '', color: '', origin: '', destination: '', estimated_arrival: '', customer_note: '', is_active: true };
 const normalizeDigits = (value = '') => String(value).replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦۷۸۹'.indexOf(digit)));
 const fileUrl = (file) => file?.startsWith('http') ? file : `${window.location.origin}${file || ''}`;
-const formFromShipment = (shipment) => ({ ...EMPTY_FORM, tracking_code: normalizeDigits(shipment?.tracking_code || ''), car_brand: shipment?.car_brand || '', car_model: shipment?.car_model || '', build_year: normalizeDigits(shipment?.build_year || ''), color: shipment?.color || '', origin: shipment?.origin || '', destination: shipment?.destination || '', estimated_arrival: normalizeDigits(shipment?.estimated_arrival || '').replace(/[^0-9]/g, ''), customer_note: shipment?.customer_note || '', is_active: shipment?.is_active ?? true });
+const formFromShipment = (shipment) => ({ ...EMPTY_FORM, tracking_code: normalizeDigits(shipment?.tracking_code || ''), customer_name: shipment?.customer_name || '', car_brand: shipment?.car_brand || '', car_model: shipment?.car_model || '', build_year: normalizeDigits(shipment?.build_year || ''), color: shipment?.color || '', origin: shipment?.origin || '', destination: shipment?.destination || '', estimated_arrival: normalizeDigits(shipment?.estimated_arrival || '').replace(/[^0-9]/g, ''), customer_note: shipment?.customer_note || '', is_active: shipment?.is_active ?? true });
 const inputClass = 'mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-[#f36b21] focus:ring-4 focus:ring-[#f36b21]/10 dark:border-white/10 dark:bg-[#0d2034] dark:text-white';
 
 const AdminPanel = () => {
@@ -162,6 +162,7 @@ const AdminPanel = () => {
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <label className="text-xs font-bold text-slate-500">کد پیگیری / VIN<input className={`${inputClass} font-outfit`} dir="ltr" value={form.tracking_code} onChange={(event) => updateField('tracking_code', event.target.value)} required /></label>
+              <label className="text-xs font-bold text-slate-500">نام مشتری<input className={inputClass} value={form.customer_name} onChange={(event) => updateField('customer_name', event.target.value)} /></label>
               
               {/* فیلد برند با قابلیت انتخاب و تایپ آزاد */}
               <label className="text-xs font-bold text-slate-500">برند خودرو

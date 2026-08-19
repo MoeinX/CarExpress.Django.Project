@@ -93,6 +93,7 @@ class Shipment(models.Model):
         DELIVERED = 7, "پارک در پارکینگ / تحویل نهایی"
 
     tracking_code = models.CharField(max_length=100, unique=True, db_index=True)
+    customer_name = models.CharField(max_length=150, blank=True)
     car_brand = models.CharField(max_length=100, blank=True)
     car_model = models.CharField(max_length=150)
     build_year = models.CharField(max_length=20, blank=True)
