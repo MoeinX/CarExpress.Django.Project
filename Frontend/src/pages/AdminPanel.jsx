@@ -5,8 +5,30 @@ import { FilePlus2, FileText, Link2, LogOut, Save, Trash2, Upload, X } from 'luc
 import api, { getApiError } from '../api';
 import ThemeToggle from '../components/ThemeToggle';
 
+const CAR_CATALOG = {
+  Toyota: ['Camry', 'Corolla', 'Land Cruiser', 'RAV4', 'Prado', 'Hilux', 'Fortuner', 'Yaris', 'C-HR', 'Avalon', 'Supra', 'Land Cruiser 300'],
+  Lexus: ['ES', 'IS', 'LS', 'LX', 'GX', 'RX', 'NX', 'UX', 'LM'],
+  BMW: ['2 Series', '3 Series', '4 Series', '5 Series', '7 Series', 'X1', 'X3', 'X5', 'X6', 'X7', 'i4', 'iX'],
+  'Mercedes-Benz': ['A-Class', 'C-Class', 'E-Class', 'S-Class', 'GLA', 'GLC', 'GLE', 'GLS', 'G-Class', 'V-Class'],
+  Porsche: ['911', '718 Cayman', '718 Boxster', 'Cayenne', 'Macan', 'Panamera', 'Taycan'],
+  Audi: ['A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'Q3', 'Q5', 'Q7', 'Q8', 'e-tron'],
+  Volkswagen: ['Golf', 'Passat', 'Jetta', 'Tiguan', 'Touareg', 'Atlas', 'ID.4'],
+  Hyundai: ['Accent', 'Elantra', 'Sonata', 'Tucson', 'Santa Fe', 'Palisade', 'Kona', 'Ioniq 5', 'Azera'],
+  Kia: ['Picanto', 'Rio', 'Cerato', 'K5', 'Sportage', 'Sorento', 'Telluride', 'Carnival', 'EV6', 'Seltos'],
+  Genesis: ['G70', 'G80', 'G90', 'GV70', 'GV80'],
+  Nissan: ['Sunny', 'Sentra', 'Altima', 'Maxima', 'Kicks', 'Qashqai', 'X-Trail', 'Patrol', 'Navara', 'Z'],
+  Infiniti: ['Q30', 'Q50', 'QX50', 'QX55', 'QX60', 'QX80'],
+  Honda: ['Civic', 'Accord', 'City', 'CR-V', 'HR-V', 'Pilot', 'Odyssey'],
+  Ford: ['Focus', 'Mustang', 'Fusion', 'Taurus', 'Escape', 'Explorer', 'Expedition', 'F-150', 'Ranger'],
+  Chevrolet: ['Spark', 'Malibu', 'Camaro', 'Corvette', 'Equinox', 'Traverse', 'Tahoe', 'Suburban', 'Silverado'],
+  Jeep: ['Renegade', 'Compass', 'Cherokee', 'Grand Cherokee', 'Wrangler', 'Gladiator'],
+  'Land Rover': ['Range Rover', 'Range Rover Sport', 'Range Rover Velar', 'Range Rover Evoque', 'Defender', 'Discovery'],
+  Volvo: ['S60', 'S90', 'XC40', 'XC60', 'XC90'],
+  Maserati: ['Ghibli', 'Quattroporte', 'Levante', 'Grecale', 'MC20'],
+};
+
 const EMPTY_FORM = { tracking_code: '', car_brand: '', car_model: '', build_year: '', color: '', origin: '', destination: '', estimated_arrival: '', customer_note: '', is_active: true };
-const normalizeDigits = (value = '') => String(value).replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+const normalizeDigits = (value = '') => String(value).replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦۷۸۹'.indexOf(digit)));
 const fileUrl = (file) => file?.startsWith('http') ? file : `${window.location.origin}${file || ''}`;
 const formFromShipment = (shipment) => ({ ...EMPTY_FORM, tracking_code: normalizeDigits(shipment?.tracking_code || ''), car_brand: shipment?.car_brand || '', car_model: shipment?.car_model || '', build_year: normalizeDigits(shipment?.build_year || ''), color: shipment?.color || '', origin: shipment?.origin || '', destination: shipment?.destination || '', estimated_arrival: normalizeDigits(shipment?.estimated_arrival || '').replace(/[^0-9]/g, ''), customer_note: shipment?.customer_note || '', is_active: shipment?.is_active ?? true });
 const inputClass = 'mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-[#f36b21] focus:ring-4 focus:ring-[#f36b21]/10 dark:border-white/10 dark:bg-[#0d2034] dark:text-white';
@@ -24,11 +46,10 @@ const AdminPanel = () => {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
 
-  // استیت‌های پویا برای برندها و مدل‌ها از CarAPI
-  const [brands, setBrands] = useState([]);
-  const [models, setModels] = useState([]);
-
   const selected = useMemo(() => shipments.find((item) => item.id === selectedId) || null, [shipments, selectedId]);
+  
+  const brands = Object.keys(CAR_CATALOG);
+  const models = form.car_brand ? CAR_CATALOG[form.car_brand] || [] : [];
 
   const clearAlerts = () => { setMessage(''); setError(''); };
   const logout = () => { localStorage.removeItem('adminAccessToken'); localStorage.removeItem('adminRefreshToken'); setToken(null); setShipments([]); setSelectedId(null); setShowForm(false); };
@@ -45,54 +66,10 @@ const AdminPanel = () => {
     }
   };
 
-  // دریافت لیست برندها هنگام لود پنل
-  useEffect(() => { 
-    if (token) {
-      loadShipments();
-      api.get('/admin/brands/')
-        .then(res => {
-          // بسته به ساختار پاسخ CarAPI (آیا آرایه مستقیم است یا داخل ولیو دیتا)
-          const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-          setBrands(data);
-        })
-        .catch(err => console.error('خطا در دریافت برندها:', err));
-    }
-  }, [token]);
+  useEffect(() => { if (token) loadShipments(); }, [token]);
 
-  // لود مدل‌ها بر اساس برند انتخاب شده
-  const handleBrandChange = async (brandName) => {
-    setForm(curr => ({ ...curr, car_brand: brandName, car_model: '' }));
-    setModels([]);
-    if (brandName) {
-      try {
-        const res = await api.get(`/admin/models/?make=${brandName}`);
-        const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-        setModels(data);
-      } catch (err) {
-        console.error('خطا در دریافت مدل‌ها:', err);
-      }
-    }
-  };
-
-  const openShipment = async (shipment) => { 
-    clearAlerts(); 
-    setSelectedId(shipment.id); 
-    setForm(formFromShipment(shipment)); 
-    setNewFiles([{ title: 'RTA', file: null }]); 
-    setShowForm(true);
-    // اگر پرونده‌ای باز شد که برند دارد، مدل‌های آن را هم لود کنیم
-    if (shipment.car_brand) {
-      try {
-        const res = await api.get(`/admin/models/?make=${shipment.car_brand}`);
-        const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-        setModels(data);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  };
-
-  const startNew = () => { clearAlerts(); setSelectedId(null); setForm({ ...EMPTY_FORM }); setModels([]); setNewFiles([{ title: 'فایل RTA', file: null }]); setShowForm(true); };
+  const openShipment = (shipment) => { clearAlerts(); setSelectedId(shipment.id); setForm(formFromShipment(shipment)); setNewFiles([{ title: 'RTA', file: null }]); setShowForm(true); };
+  const startNew = () => { clearAlerts(); setSelectedId(null); setForm({ ...EMPTY_FORM }); setNewFiles([{ title: 'فایل RTA', file: null }]); setShowForm(true); };
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: field === 'tracking_code' || field === 'build_year' ? normalizeDigits(value) : value }));
   const updateFile = (index, field, value) => setNewFiles((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item));
 
@@ -186,26 +163,34 @@ const AdminPanel = () => {
             <div className="grid gap-4 md:grid-cols-2">
               <label className="text-xs font-bold text-slate-500">کد پیگیری / VIN<input className={`${inputClass} font-outfit`} dir="ltr" value={form.tracking_code} onChange={(event) => updateField('tracking_code', event.target.value)} required /></label>
               
-              {/* دراپ‌داون برند پویا */}
+              {/* فیلد برند با قابلیت انتخاب و تایپ آزاد */}
               <label className="text-xs font-bold text-slate-500">برند خودرو
-                <select className={inputClass} value={form.car_brand} onChange={(event) => handleBrandChange(event.target.value)} required>
-                  <option value="">انتخاب برند</option>
-                  {brands.map((brand, idx) => {
-                    const brandName = typeof brand === 'string' ? brand : (brand.make || brand.name);
-                    return <option key={idx} value={brandName}>{brandName}</option>;
-                  })}
-                </select>
+                <input 
+                  className={inputClass} 
+                  list="brands-list"
+                  value={form.car_brand} 
+                  onChange={(event) => setForm({ ...form, car_brand: event.target.value, car_model: '' })} 
+                  placeholder="انتخاب یا تایپ برند..."
+                  required 
+                />
+                <datalist id="brands-list">
+                  {brands.map((brand) => <option key={brand} value={brand} />)}
+                </datalist>
               </label>
 
-              {/* دراپ‌داون مدل پویا */}
+              {/* فیلد مدل با قابلیت انتخاب و تایپ آزاد */}
               <label className="text-xs font-bold text-slate-500">مدل خودرو
-                <select className={inputClass} value={form.car_model} onChange={(event) => updateField('car_model', event.target.value)} disabled={!form.car_brand} required>
-                  <option value="">{form.car_brand ? 'انتخاب مدل' : 'ابتدا برند را انتخاب کنید'}</option>
-                  {models.map((model, idx) => {
-                    const modelName = typeof model === 'string' ? model : (model.model || model.name);
-                    return <option key={idx} value={modelName}>{modelName}</option>;
-                  })}
-                </select>
+                <input 
+                  className={inputClass} 
+                  list="models-list"
+                  value={form.car_model} 
+                  onChange={(event) => updateField('car_model', event.target.value)} 
+                  placeholder={form.car_brand ? "انتخاب یا تایپ مدل..." : "ابتدا برند را مشخص کنید"}
+                  required 
+                />
+                <datalist id="models-list">
+                  {models.map((model) => <option key={model} value={model} />)}
+                </datalist>
               </label>
 
               <label className="text-xs font-bold text-slate-500">سال ساخت<input className={inputClass} inputMode="numeric" value={form.build_year} onChange={(event) => updateField('build_year', event.target.value)} /></label>
@@ -259,7 +244,7 @@ const AdminPanel = () => {
           </div>}
         </> : <div className="flex min-h-80 items-center justify-center rounded-3xl bg-white text-center shadow-lg dark:bg-[#12283e]">
           <div>
-            <FilePlus2 className="mx-auto mb-3 text-[#f36b21]" size={42} />
+            <FilePlus2 className="mx-auto mb-3 text-[#f36b21]" size5={42} size={42} />
             <h2 className="font-extrabold">پرونده‌ای انتخاب نشده</h2>
             <p className="mt-2 text-xs text-slate-400">از فهرست یک پرونده را انتخاب کنید.</p>
           </div>

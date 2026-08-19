@@ -66,7 +66,7 @@ const HomePage = () => {
               className="flex-shrink-0 cursor-pointer"
               onClick={() => navigate("/")}
             >
-              <img src="{Logo}" alt="" />
+              <img src="." alt="CarExpress Logo" className="h-10 object-contain" />
             </div>
 
             <div className="flex items-center gap-3">
@@ -106,7 +106,6 @@ const HomePage = () => {
                     </svg>
                   )}
                 </button>
-                {/* این متن نامرئی است و فقط برای تراز کردن دکمه‌ها استفاده می‌شود */}
                 <span className="text-[10px] font-bold mt-1 opacity-0 pointer-events-none select-none">
                   تراز
                 </span>
@@ -146,10 +145,10 @@ const HomePage = () => {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1503376760302-86f7b19a770a?q=80&w=2000')] bg-cover bg-center transition-all duration-700 group-hover:blur-md group-hover:scale-105"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-navyDeep/80 via-navyDeep/50 to-[#F5F7FA] dark:to-navyDeep"></div>
 
-        {/* عکس ماشین PNG شناور */}
+        {/* عکس ماشین PNG شناور (آدرس‌دهی شده از پوشه پابلیک) */}
         <div className="absolute right-[-10%] md:right-[5%] bottom-10 z-10 w-[70%] md:w-[50%] pointer-events-none transition-transform duration-700 group-hover:scale-105 opacity-90">
           <img
-            src="https://www.pngarts.com/files/3/Luxury-Car-PNG-High-Quality-Image.png"
+            src="/assets/images/Logo.png"
             alt="Luxury Car PNG"
             className="w-full object-contain drop-shadow-2xl"
           />
