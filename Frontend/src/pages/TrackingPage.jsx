@@ -1,152 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CalendarDays, Check, Download, FileText, MapPin, Search, ShieldCheck } from 'lucide-react';
 
 import api, { getApiError } from '../api';
 import ThemeToggle from '../components/ThemeToggle';
 
+const normalizeDigits = (value = '') => String(value).replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+const fileUrl = (file) => file?.startsWith('http') ? file : `${window.location.origin}${file || ''}`;
+
 const TrackingPage = () => {
   const navigate = useNavigate();
-  const [trackingCode, setTrackingCode] = useState('');
+  const [code, setCode] = useState('');
   const [shipment, setShipment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const handleSearch = async (event) => {
-    event.preventDefault();
-    const code = trackingCode.trim();
-    if (!code) return;
-
-    setLoading(true);
-    setError('');
-    setShipment(null);
-    try {
-      const response = await api.get(`/tracking/${encodeURIComponent(code)}/`);
-      setShipment(response.data);
-    } catch (requestError) {
-      if (requestError?.response?.status === 404) {
-        setError('کد پیگیری پیدا نشد یا پرونده غیرفعال است.');
-      } else {
-        setError(getApiError(requestError));
-      }
-    } finally {
-      setLoading(false);
-    }
+  const search = async (event) => {
+    event.preventDefault(); const normalizedCode = normalizeDigits(code).trim();
+    if (!normalizedCode) return;
+    setLoading(true); setError(''); setShipment(null);
+    try { const response = await api.get(`/tracking/${encodeURIComponent(normalizedCode)}/`); setShipment(response.data); }
+    catch (requestError) { setError(requestError?.response?.status === 404 ? 'کد پیگیری پیدا نشد یا پرونده غیرفعال است.' : getApiError(requestError)); }
+    finally { setLoading(false); }
   };
-
   const steps = shipment?.steps || [];
-  const currentIndex = steps.findIndex((step) => step.status === 'current');
-  const lastCompletedIndex = steps.reduce(
-    (lastIndex, step, index) => step.status === 'completed' ? index : lastIndex,
-    -1
-  );
-  const displayIndex = currentIndex >= 0 ? currentIndex : lastCompletedIndex;
-  const progressWidth = steps.length > 1
-    ? `${(Math.max(displayIndex, 0) / (steps.length - 1)) * 92}%`
-    : displayIndex === 0 ? '92%' : '0%';
-  const glass = 'rounded-3xl border border-white/50 bg-white/80 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-gray-600/40 dark:bg-[#333F4A]/70 md:p-8';
+  const documents = shipment?.documents || [];
+  const vehicleName = [shipment?.car_brand, shipment?.car_model].filter(Boolean).join(' ');
 
-  return (
-    <main className="min-h-screen bg-[#F5F7FA] px-4 pb-20 pt-8 transition-colors duration-500 dark:bg-navyDeep sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-10 flex items-center justify-between">
-          <button onClick={() => navigate('/')} className="font-outfit text-2xl font-extrabold text-[#333F4A] dark:text-white">
-            Car<span className="text-[#FF8C00]">Express</span>
-          </button>
-          <div className="flex gap-2">
-            <ThemeToggle />
-            <button onClick={() => navigate('/admin-panel')} className="rounded-xl bg-[#333F4A] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#E31837]">
-              پنل مدیریت
-            </button>
-          </div>
-        </div>
-
-        <header className="mx-auto mb-10 max-w-2xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#FF8C00]/20 bg-[#FF8C00]/10 px-4 py-1.5 text-xs font-bold text-[#FF8C00]">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-[#FF8C00]" />
-            سامانه رهگیری لحظه‌ای کار اکسپرس
-          </div>
-          <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-[#333F4A] dark:text-white md:text-5xl">
-            پیگیری <span className="bg-gradient-to-r from-[#FF8C00] to-[#E31837] bg-clip-text text-transparent">حمل خودرو</span>
-          </h1>
-          <p className="text-sm leading-7 text-gray-600 dark:text-gray-300">
-            شماره شاسی یا کد پیگیری پرونده را وارد کنید تا آخرین مراحل ثبت‌شده توسط مدیریت را ببینید.
-          </p>
-        </header>
-
-        <section className={`${glass} mx-auto mb-10 max-w-2xl !p-4 md:!p-6`}>
-          <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row">
-            <input
-              value={trackingCode}
-              onChange={(event) => setTrackingCode(event.target.value)}
-              dir="ltr"
-              placeholder="TRQ-8902 یا VIN"
-              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-3.5 font-outfit text-lg font-bold tracking-wider text-slate-800 outline-none transition focus:border-[#FF8C00] focus:ring-2 focus:ring-[#FF8C00]/20 dark:border-gray-600 dark:bg-navyDeep/80 dark:text-white"
-            />
-            <button disabled={loading} className="shrink-0 rounded-2xl bg-[#FF8C00] px-8 py-3.5 font-bold text-white shadow-lg shadow-[#FF8C00]/30 transition hover:bg-[#E31837] disabled:opacity-60">
-              {loading ? 'در حال بررسی...' : 'استعلام وضعیت'}
-            </button>
-          </form>
-          {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600 dark:bg-red-950/30">{error}</p>}
-        </section>
-
-        {shipment && (
-          <section className={glass}>
-            <div className="mb-8 flex flex-col justify-between gap-4 border-b border-gray-200 pb-6 dark:border-gray-700 md:flex-row md:items-center">
-              <div>
-                <span className="mb-1 block text-xs text-gray-400">خودروی در حال ترانزیت</span>
-                <h2 className="font-outfit text-2xl font-extrabold text-[#333F4A] dark:text-white">{shipment.car_model}</h2>
-                <div className="mt-2 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
-                  <span>کد پیگیری: <strong className="font-outfit text-slate-800 dark:text-gray-200">{shipment.tracking_code}</strong></span>
-                  {shipment.color && <span>رنگ: <strong className="text-slate-800 dark:text-gray-200">{shipment.color}</strong></span>}
-                </div>
-              </div>
-              <div className="rounded-2xl border border-[#FF8C00]/30 bg-[#FF8C00]/10 px-5 py-3">
-                <span className="mb-1 block text-xs text-gray-500 dark:text-gray-400">وضعیت کنونی</span>
-                <strong className="text-[#FF8C00]">{shipment.current_step?.title || 'هنوز مرحله‌ای ثبت نشده'}</strong>
-              </div>
-            </div>
-
-            {steps.length > 0 ? (
-              <div className="my-4 overflow-x-auto py-8">
-                <div className="relative min-w-[650px] px-4">
-                  <div className="absolute left-8 right-8 top-7 z-0 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700" />
-                  <div className="absolute right-8 top-7 z-0 h-1.5 rounded-full bg-gradient-to-l from-[#FF8C00] to-[#E31837] transition-all duration-700" style={{ width: progressWidth }} />
-                  <div className="relative z-10 flex justify-between">
-                    {steps.map((step, index) => {
-                      const completed = step.status === 'completed';
-                      const current = step.status === 'current';
-                      return (
-                        <div key={step.id} className="flex w-24 flex-col items-center text-center">
-                          <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full font-outfit text-sm font-bold transition ${
-                            current ? 'scale-110 bg-[#FF8C00] text-white ring-4 ring-[#FF8C00]/30' :
-                            completed ? 'bg-[#E31837] text-white' :
-                            'border-2 border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-800'
-                          }`}>
-                            {completed ? '✓' : index + 1}
-                          </div>
-                          <h3 className={`mb-1 text-xs font-bold ${current ? 'text-[#FF8C00]' : completed ? 'text-[#333F4A] dark:text-white' : 'text-gray-400'}`}>{step.title}</h3>
-                          <span className="text-[10px] text-gray-400">{step.description}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p className="rounded-2xl bg-gray-50 p-6 text-center text-sm text-gray-500 dark:bg-navyDeep/40">هنوز مرحله‌ای برای این پرونده ثبت نشده است.</p>
-            )}
-
-            <div className="mt-8 grid gap-4 rounded-2xl bg-gray-50/70 p-6 dark:bg-navyDeep/40 md:grid-cols-3">
-              <div><span className="mb-1 block text-xs text-gray-400">مبدأ</span><strong className="text-sm text-[#333F4A] dark:text-white">{shipment.origin}</strong></div>
-              <div><span className="mb-1 block text-xs text-gray-400">مقصد</span><strong className="text-sm text-[#333F4A] dark:text-white">{shipment.destination}</strong></div>
-              <div><span className="mb-1 block text-xs text-gray-400">تخمین تحویل</span><strong className="text-sm text-[#FF8C00]">{shipment.estimated_arrival || 'در حال بررسی'}</strong></div>
-            </div>
-            {shipment.customer_note && <p className="mt-4 rounded-2xl border border-[#FF8C00]/20 bg-[#FF8C00]/5 p-4 text-sm text-gray-600 dark:text-gray-300">{shipment.customer_note}</p>}
-          </section>
-        )}
-      </div>
-    </main>
-  );
+  return <main className="min-h-screen bg-[#f5f7fa] text-[#102238] dark:bg-[#091827] dark:text-white"><div className="mx-auto max-w-6xl px-4 pb-20 pt-5 sm:px-6 lg:px-8"><nav className="mb-10 flex items-center justify-between"><button onClick={() => navigate('/')} className="font-outfit text-2xl font-extrabold">Car<span className="text-[#f36b21]">Express</span></button><div className="flex items-center gap-2"><ThemeToggle /><button onClick={() => navigate('/admin-panel')} className="hidden rounded-xl bg-[#102238] px-4 py-2 text-xs font-bold text-white dark:bg-white/10 sm:block">پنل مدیریت</button></div></nav><header className="mb-7 overflow-hidden rounded-[2rem] bg-[#102238] px-6 py-9 text-white shadow-2xl sm:px-10"><p className="mb-4 text-xs font-bold text-[#ffb17c]">CarExpress / سامانه رهگیری</p><h1 className="max-w-xl text-3xl font-extrabold leading-tight sm:text-5xl">مسیر خودروی شما،<br /><span className="text-[#ff8b4d]">شفاف و قابل پیگیری</span></h1><p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">کد پیگیری یا شماره شاسی را وارد کنید تا وضعیت حمل و اسناد پرونده را ببینید.</p></header><form onSubmit={search} className="mb-8 flex flex-col gap-3 rounded-3xl bg-white p-3 shadow-xl dark:bg-[#12283e] sm:flex-row"><div className="relative flex-1"><Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={19} /><input value={code} onChange={(event) => setCode(normalizeDigits(event.target.value))} dir="ltr" placeholder="TRQ-8902 یا VIN" className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-4 pr-12 font-outfit font-bold outline-none focus:border-[#f36b21] dark:border-white/10 dark:bg-[#091827]" /></div><button disabled={loading} className="rounded-2xl bg-[#f36b21] px-8 py-4 text-sm font-extrabold text-white disabled:opacity-60">{loading ? 'در حال استعلام...' : 'مشاهده وضعیت'}</button></form>{error && <p className="mb-6 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-600">{error}</p>}{shipment && <div className="space-y-6"><section className="grid gap-6 lg:grid-cols-[1fr_280px]"><div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-[#12283e] sm:p-8"><div className="mb-7 flex flex-col justify-between gap-4 border-b border-slate-100 pb-6 dark:border-white/10 sm:flex-row"><div><p className="mb-2 text-xs text-slate-400">پرونده حمل خودرو</p><h2 className="font-outfit text-2xl font-extrabold">{vehicleName}</h2><div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400"><span dir="ltr" className="font-outfit">{shipment.tracking_code}</span>{shipment.build_year && <span>مدل {shipment.build_year}</span>}{shipment.color && <span>{shipment.color}</span>}</div></div><span className="flex h-fit items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"><ShieldCheck size={16} /> پرونده فعال</span></div><div className="mb-4 flex items-end justify-between"><div><p className="text-xs text-slate-400">مرحله فعلی</p><strong className="mt-1 block text-lg text-[#f36b21]">{shipment.current_step?.title || 'در انتظار شروع'}</strong></div><strong className="font-outfit text-3xl">{shipment.progress || 0}<small className="text-base text-slate-400">%</small></strong></div><div className="mb-8 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10"><div className="h-full rounded-full bg-[#f36b21] transition-all" style={{ width: `${shipment.progress || 0}%` }} /></div><div className="grid gap-3 sm:grid-cols-2">{steps.map((step) => <div key={step.id} className={`flex gap-3 rounded-2xl border p-3 ${step.status === 'current' ? 'border-[#f36b21] bg-[#f36b21]/5' : 'border-slate-100 dark:border-white/10'}`}><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${step.status === 'completed' ? 'bg-emerald-500 text-white' : step.status === 'current' ? 'bg-[#f36b21] text-white' : 'bg-slate-100 text-slate-400 dark:bg-white/10'}`}>{step.status === 'completed' ? <Check size={15} /> : step.position}</span><div><strong className="block text-xs">{step.title}</strong><span className="mt-1 block text-[10px] text-slate-400">{step.description}</span></div></div>)}</div></div><aside className="rounded-3xl bg-[#f36b21] p-6 text-white shadow-xl shadow-[#f36b21]/20"><p className="mb-7 text-xs text-white/70">خلاصه مسیر</p><div className="space-y-6"><div className="flex gap-3"><MapPin size={18} /><div><small className="block text-[10px] text-white/70">مبدأ</small><strong className="text-sm">{shipment.origin}</strong></div></div><div className="flex gap-3"><MapPin size={18} /><div><small className="block text-[10px] text-white/70">مقصد</small><strong className="text-sm">{shipment.destination}</strong></div></div><div className="flex gap-3"><CalendarDays size={18} /><div><small className="block text-[10px] text-white/70">تخمین تحویل</small><strong className="text-sm">{shipment.estimated_arrival || 'در حال بررسی'}</strong></div></div></div></aside></section><section className="rounded-3xl bg-white p-6 shadow-lg dark:bg-[#12283e] sm:p-8"><div className="mb-5 flex items-center justify-between"><div><h2 className="flex items-center gap-2 text-lg font-extrabold"><FileText className="text-[#f36b21]" size={20} /> اسناد پرونده</h2><p className="mt-1 text-xs text-slate-400">مدارکی که مدیر برای گیرنده ثبت کرده است</p></div><span className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-500 dark:bg-white/10 dark:text-slate-300">{documents.length} فایل</span></div>{documents.length ? <div className="grid gap-3 sm:grid-cols-2">{documents.map((doc) => <a key={doc.id} href={fileUrl(doc.file)} target="_blank" rel="noreferrer" className="group flex items-center gap-3 rounded-2xl border border-slate-200 p-4 transition hover:border-[#f36b21] hover:bg-[#f36b21]/5 dark:border-white/10"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f36b21]/10 text-[#f36b21]"><FileText size={19} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-sm">{doc.title}</strong><small className="mt-1 block text-[10px] text-slate-400">مشاهده یا دانلود</small></span><Download size={17} className="text-slate-400 group-hover:text-[#f36b21]" /></a>)}</div> : <p className="rounded-2xl border border-dashed border-slate-200 p-7 text-center text-sm text-slate-400 dark:border-white/10">هنوز فایلی برای این پرونده ثبت نشده است.</p>}</section></div>}</div></main>;
 };
 
 export default TrackingPage;

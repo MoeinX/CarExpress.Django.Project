@@ -93,7 +93,9 @@ class Shipment(models.Model):
         DELIVERED = 7, "پارک در پارکینگ / تحویل نهایی"
 
     tracking_code = models.CharField(max_length=100, unique=True, db_index=True)
+    car_brand = models.CharField(max_length=100, blank=True)
     car_model = models.CharField(max_length=150)
+    build_year = models.CharField(max_length=20, blank=True)
     color = models.CharField(max_length=80, blank=True)
     origin = models.CharField(max_length=200)
     destination = models.CharField(max_length=200)
@@ -115,4 +117,14 @@ class Shipment(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.tracking_code} - {self.car_model}"
+        return f"{self.tracking_code} - {self.car_brand} {self.car_model}"
+
+
+class ShipmentDocument(models.Model):
+    shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE, related_name="documents")
+    title = models.CharField(max_length=200)
+    file = models.FileField(upload_to="shipment_docs/")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.shipment.tracking_code}"

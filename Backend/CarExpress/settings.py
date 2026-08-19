@@ -17,20 +17,17 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-sj%wt6jib2%cs_1l(hg@e4%s&u(+o5u*f)@kpi!z$uc^-w0*2t')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(int(os.getenv("DEBUG")))
+DEBUG = bool(int(os.getenv("DEBUG", "1")))
 
 # ALLOWED_HOSTS = list(os.getenv("ALLOWED_HOSTS").split(","))
 ALLOWED_HOSTS = ["*"]
-
-
 
 
 # Application definition
@@ -97,11 +94,11 @@ WSGI_APPLICATION = 'CarExpress.wsgi.application'
 DATABASES = {
     'default': {
         "ENGINE": "django.db.backends.postgresql",
-        'NAME': os.getenv('POSTGRES_DB'),
-        'USER': os.getenv('POSTGRES_USER'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'HOST': os.getenv('POSTGRES_HOST'),
-        'PORT': os.getenv('POSTGRES_PORT'),
+        'NAME': os.getenv('POSTGRES_DB', 'express_db'),
+        'USER': os.getenv('POSTGRES_USER', 'express_user'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'express'),
+        'HOST': os.getenv('DB_HOST', 'db'),    # <--- مشکل اینجا حل شد
+        'PORT': os.getenv('DB_PORT', '5432'),  # <--- مشکل اینجا حل شد
     }
 }
 
@@ -157,3 +154,6 @@ STORAGES = {
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

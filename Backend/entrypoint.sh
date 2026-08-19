@@ -10,8 +10,8 @@ connection = psycopg2.connect(
     dbname=os.environ["POSTGRES_DB"],
     user=os.environ["POSTGRES_USER"],
     password=os.environ["POSTGRES_PASSWORD"],
-    host=os.environ["POSTGRES_HOST"],
-    port=os.environ["POSTGRES_PORT"],
+    host=os.getenv("POSTGRES_HOST", os.getenv("DB_HOST", "db")),
+    port=os.getenv("POSTGRES_PORT", os.getenv("DB_PORT", "5432")),
 )
 with connection, connection.cursor() as cursor:
     cursor.execute(
