@@ -1,35 +1,41 @@
-import requests
-from django.conf import settings
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from rest_framework import permissions, viewsets
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
-from .models import Shipment, ShipmentDocument
-from .serializers import ShipmentSerializer
+from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-# کلید API خود را اینجا وارد کنید
-CAR_API_KEY = "YOUR_CAR_API_KEY_HERE"
+from .models import Shipment
+from .serializers import (
+    ShipmentSerializer,
+    StaffTokenObtainPairSerializer,
+)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_car_brands(request):
-    headers = {'accept': 'application/json', 'Authorization': f'Bearer {CAR_API_KEY}'}
-    try:
-        response = requests.get('https://carapi.app/api/makes', headers=headers, timeout=10)
-        return Response(response.json(), status=response.status_code)
-    except requests.RequestException as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_car_models(request):
-    make = request.GET.get('make')
-    if not make:
-        return Response({"error": "Make parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    headers = {'accept': 'application/json', 'Authorization': f'Bearer {CAR_API_KEY}'}
-    try:
-        response = requests.get(f'https://carapi.app/api/models?make={make}', headers=headers, timeout=10)
-        return Response(response.json(), status=response.status_code)
-    except requests.RequestException as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+class StaffTokenObtainPairView(TokenObtainPairView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = StaffTokenObtainPairSerializer
+
+
+class PublicTrackingView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request, tracking_code):
+        shipment = get_object_or_404(
+            Shipment,
+            tracking_code=tracking_code.strip().upper(),
+            is_active=True,
+        )
+        return Response(ShipmentSerializer(shipment, context={"request": request}).data)
+
+
+class ShipmentViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
+    serializer_class = ShipmentSerializer
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
+    queryset = Shipment.objects.all()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
