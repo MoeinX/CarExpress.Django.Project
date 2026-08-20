@@ -1,0 +1,132 @@
+from django.contrib.auth import authenticate
+from django.db import transaction
+from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+from .models import STANDARD_TRACKING_STEPS, Shipment, ShipmentDocument
+
+
+def normalize_digits(value):
+    value = str(value)
+    return value.translate(str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789"))
+
+class StaffTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        user = authenticate(
+            request=self.context.get("request"),
+            username=attrs.get(self.username_field),
+            password=attrs.get("password"),
+        )
+        if user is not None and not user.is_staff:
+            raise serializers.ValidationError(
+                {"detail": "Only staff users can access the management panel."}
+            )
+        data = super().validate(attrs)
+        data["phone_number"] = self.user.phone_number
+        return data
+
+
+class ShipmentDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShipmentDocument
+        fields = ("id", "title", "file", "created_at")
+        read_only_fields = ("id", "created_at")
+
+
+class ShipmentSerializer(serializers.ModelSerializer):
+    steps = serializers.SerializerMethodField()
+    progress = serializers.SerializerMethodField()
+    current_step = serializers.SerializerMethodField()
+    documents = ShipmentDocumentSerializer(many=True, read_only=True)  # این خط برای ارسال فایل‌ها به فرانت‌اند ضروری است
+
+    class Meta:
+        model = Shipment
+        fields = (
+            "id",
+            "tracking_code",
+            "customer_name",
+            "car_brand",
+            "car_model",
+            "build_year",
+            "color",
+            "origin",
+            "destination",
+            "estimated_arrival",
+            "customer_note",
+            "completed_steps",
+            "is_active",
+            "steps",
+            "progress",
+            "current_step",
+            "documents",  # حتماً باید اینجا باشد
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("id", "created_at", "updated_at")
+
+    def to_internal_value(self, data):
+        normalized_data = data.copy()
+        for field in ("tracking_code", "build_year", "estimated_arrival"):
+            if field in normalized_data:
+                normalized_data[field] = normalize_digits(normalized_data[field])
+        return super().to_internal_value(normalized_data)
+
+    def _create_documents(self, shipment, request):
+        if not request:
+            return
+
+        files = request.FILES.getlist("uploaded_files")
+        titles = request.data.getlist("file_titles") if hasattr(request.data, "getlist") else []
+        for index, file in enumerate(files):
+            title = titles[index].strip() if index < len(titles) else ""
+            ShipmentDocument.objects.create(
+                shipment=shipment,
+                title=title or f"فایل {index + 1}",
+                file=file,
+            )
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        with transaction.atomic():
+            shipment = Shipment.objects.create(**validated_data)
+            self._create_documents(shipment, request)
+        return shipment
+
+    def update(self, instance, validated_data):
+        request = self.context.get("request")
+        with transaction.atomic():
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+            instance.save()
+            self._create_documents(instance, request)
+        return instance
+
+    def get_progress(self, obj):
+        return round((obj.completed_steps / len(STANDARD_TRACKING_STEPS)) * 100)
+
+    def get_steps(self, obj):
+        return [
+            {
+                "id": position,
+                "position": position,
+                "title": title,
+                "description": description,
+                "status": (
+                    "completed"
+                    if position <= obj.completed_steps
+                    else "current"
+                    if position == obj.completed_steps + 1
+                    else "pending"
+                ),
+            }
+            for position, (title, description) in enumerate(
+                STANDARD_TRACKING_STEPS,
+                start=1,
+            )
+        ]
+
+    def get_current_step(self, obj):
+        steps = self.get_steps(obj)
+        if obj.completed_steps >= len(steps):
+            return steps[-1]
+        return steps[obj.completed_steps]

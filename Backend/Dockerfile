@@ -17,4 +17,5 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Make entrypoint script executable
-RUN chmod +x /usr/src/app/entrypoint.sh
+COPY entrypoint.sh entrypoint.sh
+RUN chmod +x entrypoint.sh
