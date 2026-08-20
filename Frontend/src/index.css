@@ -10,6 +10,12 @@
     @apply font-['Vazirmatn'] bg-slate-50 text-slate-900 transition-colors duration-300;
     direction: rtl;
   }
+
+  html[lang='en'] body,
+  html[lang='en'] body * {
+    direction: ltr;
+    unicode-bidi: plaintext;
+  }
   
   html.dark body {
     /* اکنون bg-navyDeep بدون ارور کار خواهد کرد */
@@ -21,5 +27,27 @@
   /* کلاس کمکی برای متون و اعداد انگلیسی در سراسر پروژه */
   .font-en {
     @apply font-['Outfit'] tracking-wide;
+  }
+}
+
+@layer components {
+  main > div > header[class*="bg-[#102238]"] {
+    background-color: #ffffff;
+    color: #102238;
+    border: 1px solid rgb(226 232 240);
+  }
+
+  main > div > header[class*="bg-[#102238]"] p:last-child {
+    color: rgb(71 85 105);
+  }
+
+  html.dark main > div > header[class*="bg-[#102238]"] {
+    background-color: #102238;
+    color: #ffffff;
+    border-color: rgb(255 255 255 / 0.1);
+  }
+
+  html.dark main > div > header[class*="bg-[#102238]"] p:last-child {
+    color: rgb(203 213 225);
   }
 }

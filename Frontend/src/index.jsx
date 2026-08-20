@@ -4,6 +4,10 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+document.documentElement.classList.toggle('dark', localStorage.getItem('theme') === 'dark');
+document.documentElement.lang = localStorage.getItem('language') || 'fa';
+document.documentElement.dir = document.documentElement.lang === 'en' ? 'ltr' : 'rtl';
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>

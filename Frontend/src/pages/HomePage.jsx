@@ -1,33 +1,53 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import {
+  Anchor,
+  ArrowLeft,
+  Check,
+  Search,
+  ShieldCheck,
+  Zap,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ThemeToggle from "../components/ThemeToggle";
 
-const AnalogCounter = ({ end, suffix = "" }) => {
-  const [displayValue, setDisplayValue] = useState(0);
-  const [isLocked, setIsLocked] = useState(false);
+const ThemeAwareLogo = () => {
+  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
 
   useEffect(() => {
-    let startTime = Date.now();
-    const duration = 1000;
+    const observer = new MutationObserver(() => {
+      setDarkMode(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
-    const updateCounter = () => {
-      let elapsed = Date.now() - startTime;
-      if (elapsed < duration) {
-        setDisplayValue(Math.floor(Math.random() * (end * 1.5)));
-        requestAnimationFrame(updateCounter);
-      } else {
-        setDisplayValue(end);
-        setIsLocked(true);
-      }
+  return (
+    <img
+      src={darkMode ? "/assets/images/Logo-Dark.png" : "/assets/images/Logo-Light.png"}
+      alt="CarExpress"
+      className="h-9 w-auto object-contain"
+    />
+  );
+};
+
+const AnalogCounter = ({ end, suffix = "" }) => {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    const startedAt = Date.now();
+    let frameId;
+    const tick = () => {
+      const progress = Math.min((Date.now() - startedAt) / 900, 1);
+      setValue(Math.floor(end * progress));
+      if (progress < 1) frameId = requestAnimationFrame(tick);
     };
-
-    updateCounter();
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
   }, [end]);
 
   return (
-    <span
-      className={`font-en transition-all duration-300 ${isLocked ? "scale-100 opacity-100" : "scale-95 opacity-80 blur-[0.5px]"}`}
-    >
-      {displayValue}
+    <span className="font-en">
+      {value}
       {suffix}
     </span>
   );
@@ -35,328 +55,263 @@ const AnalogCounter = ({ end, suffix = "" }) => {
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const glass =
+    "rounded-[1.75rem] border border-white/60 bg-white/55 p-7 shadow-[0_20px_60px_rgba(38,56,75,0.12)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/45 dark:shadow-black/20";
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    const handleScroll = () => setScrolled(window.scrollY > 24);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle("dark");
-  };
-
-  const glassStyle =
-    "bg-white/70 dark:bg-[#333F4A]/60 backdrop-blur-xl border border-white/40 dark:border-gray-600/40 shadow-xl rounded-3xl p-8";
+  const stats = [
+    [850, "+", "خودروی ترخیص شده"],
+    [48, "h", "رکورد زمانی ترخیص"],
+    [100, "%", "تضمین سلامت کالا"],
+  ];
+  const ports = [
+    [
+      "دبی",
+      "Jebel Ali Port",
+      "هاب تجاری منطقه برای بارگیری ایمن خودروهای خاص.",
+      "/assets/images/Dubai-P.jpg",
+    ],
+    [
+      "شارجه",
+      "Port Khalid",
+      "کوتاه‌ترین مسیر دریایی برای کاهش زمان ترانزیت.",
+      "/assets/images/Sharjah-P.jpg",
+    ],
+    [
+      "ابوظبی",
+      "Khalifa Port",
+      "شاهراه مدرن برای مدیریت هوشمند خودروهای سفارشی.",
+      "/assets/images/Abu Dhabi-P.jpg",
+    ],
+  ];
+  const testimonials = [
+    [
+      "امیرحسین راد",
+      "Porsche Macan",
+      "روند کار فوق‌العاده حرفه‌ای و شفاف پیش رفت.",
+    ],
+    [
+      "محمد تهرانی",
+      "BMW 7 Series",
+      "تیم ترخیص سریع عمل کرد و خودرو دقیقاً به‌موقع تحویل شد.",
+    ],
+  ];
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] dark:bg-navyDeep font-['Vazirmatn'] transition-colors duration-500 overflow-x-hidden">
-      {/* ----------------- نوبار رسمی با آیکون‌های Solid و دکمه پیگیری ----------------- */}
+    <div className="min-h-screen overflow-x-hidden bg-[#e8eef2] font-['Vazirmatn'] text-[#1c2b38] transition-colors duration-500 dark:bg-[#101a24] dark:text-white">
       <nav
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? "py-4" : "py-6"}`}
+        className={`fixed inset-x-0 top-0 z-50 px-4 transition-all sm:px-8 ${scrolled ? "py-3" : "py-5"}`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div
-            className={`flex justify-between items-center px-6 py-4 rounded-2xl transition-all ${isScrolled ? "bg-white/90 dark:bg-navyDeep/90 backdrop-blur-md shadow-lg border border-gray-200 dark:border-gray-700" : "bg-white/10 backdrop-blur-sm border border-white/20"}`}
+        <div
+          className={`mx-auto flex max-w-7xl items-center justify-between rounded-2xl border px-4 py-3 backdrop-blur-2xl sm:px-6 ${scrolled ? "border-white/70 bg-white/70 shadow-lg dark:border-white/10 dark:bg-slate-900/70" : "border-white/30 bg-white/10"}`}
+        >
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-3"
+            aria-label="صفحه اصلی"
           >
-            <div
-              className="flex-shrink-0 cursor-pointer"
-              onClick={() => navigate("/")}
+            <ThemeAwareLogo />
+          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={() => navigate("/tracking")}
+              className="flex items-center gap-2 rounded-full bg-[#e85d3f] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#e85d3f]/25 transition hover:bg-[#d94b31]"
             >
-              <img src="." alt="CarExpress Logo" className="h-10 object-contain" />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col items-center justify-center">
-                <button
-                  onClick={toggleTheme}
-                  className="bg-[#FF8C00] hover:bg-[#E31837] text-white p-2.5 rounded-full transition-all shadow-md hover:scale-105"
-                  title={isDarkMode ? "تغییر به حالت روز" : "تغییر به حالت شب"}
-                >
-                  {isDarkMode ? (
-                    <svg
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      className="w-5 h-5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-2.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      className="w-5 h-5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"
-                      />
-                    </svg>
-                  )}
-                </button>
-                <span className="text-[10px] font-bold mt-1 opacity-0 pointer-events-none select-none">
-                  تراز
-                </span>
-              </div>
-
-              <div className="flex flex-col items-center justify-center">
-                <button
-                  onClick={() => navigate("/tracking")}
-                  className="bg-[#FF8C00] hover:bg-[#E31837] text-white p-2.5 rounded-full transition-all shadow-md hover:scale-105"
-                  title="استعلام و پیگیری خودرو"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-                <span
-                  className={`text-[10px] font-bold mt-1 transition-colors ${isScrolled ? "text-gray-700 dark:text-gray-300" : "text-white"}`}
-                >
-                  استعلام
-                </span>
-              </div>
-            </div>
+              <Search size={17} />
+              <span>استعلام خودرو</span>
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* ----------------- هیرو سکشن مینیمال با عکس PNG شناور و لایه عنوان زیر عکس ----------------- */}
-      <section className="relative h-[75vh] min-h-[600px] flex items-center justify-center overflow-hidden group">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1503376760302-86f7b19a770a?q=80&w=2000')] bg-cover bg-center transition-all duration-700 group-hover:blur-md group-hover:scale-105"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-navyDeep/80 via-navyDeep/50 to-[#F5F7FA] dark:to-navyDeep"></div>
-
-        {/* عکس ماشین PNG شناور (آدرس‌دهی شده از پوشه پابلیک) */}
-        <div className="absolute right-[-10%] md:right-[5%] bottom-10 z-10 w-[70%] md:w-[50%] pointer-events-none transition-transform duration-700 group-hover:scale-105 opacity-90">
-          <img
-            src="/assets/images/Logo.png"
-            alt="Luxury Car PNG"
-            className="w-full object-contain drop-shadow-2xl"
-          />
-        </div>
-
-        {/* متن‌ها */}
-        <div className="relative z-20 text-center max-w-4xl mx-auto px-4 mt-10">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight drop-shadow-2xl">
-            پیشرو در ترانزیت هوشمند <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF8C00] to-[#E31837]">
-              خودروهای لوکس امارات
-            </span>
-          </h1>
-          <p className="text-lg md:text-xl text-gray-200 max-w-xl mx-auto font-light drop-shadow-md">
-            استاندارد نوین لجستیک، ترخیص تخصصی و ضمانت صددرصدی سلامت خودرو در
-            تمامی مسیرهای دریایی.
-          </p>
-        </div>
-      </section>
-
-      {/* ----------------- بخش آمار و ارقام (چرخش آنالوگ ۱ ثانیه‌ای) ----------------- */}
-      <section className="py-16 -mt-20 relative z-30 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div
-            className={`${glassStyle} text-center flex flex-col items-center justify-center`}
+      <main>
+        <section className="relative flex min-h-[720px] items-end overflow-hidden pb-20 pt-32 sm:min-h-[790px] sm:pb-28">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster="/assets/images/Logo-Light.png"
+            className="absolute inset-0 h-full w-full object-cover"
           >
-            <div className="text-4xl font-extrabold text-[#333F4A] dark:text-white mb-2 text-transparent bg-clip-text bg-gradient-to-br from-[#FF8C00] to-[#E31837]">
-              <AnalogCounter end={850} suffix="+" />
-            </div>
-            <h3 className="font-bold text-gray-500 dark:text-gray-400">
-              خودروی ترخیص شده
-            </h3>
-          </div>
-          <div
-            className={`${glassStyle} text-center flex flex-col items-center justify-center`}
-          >
-            <div className="text-4xl font-extrabold text-[#333F4A] dark:text-white mb-2 text-transparent bg-clip-text bg-gradient-to-br from-[#FF8C00] to-[#E31837]">
-              <AnalogCounter end={48} suffix="h" />
-            </div>
-            <h3 className="font-bold text-gray-500 dark:text-gray-400">
-              رکورد زمانی ترخیص
-            </h3>
-          </div>
-          <div
-            className={`${glassStyle} text-center flex flex-col items-center justify-center`}
-          >
-            <div className="text-4xl font-extrabold text-[#333F4A] dark:text-white mb-2 text-transparent bg-clip-text bg-gradient-to-br from-[#FF8C00] to-[#E31837]">
-              <AnalogCounter end={100} suffix="%" />
-            </div>
-            <h3 className="font-bold text-gray-500 dark:text-gray-400">
-              تضمین سلامت کالا
-            </h3>
-          </div>
-        </div>
-      </section>
-
-      {/* ----------------- بخش ویژگی‌ها ----------------- */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-extrabold text-[#333F4A] dark:text-white mb-3">
-            چرا کار اکسپرس؟
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            معیارهای حرفه‌ای ما در ارائه خدمات لجستیک.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className={`${glassStyle} flex flex-col justify-center`}>
-            <div className="text-4xl mb-4">🛡️</div>
-            <h3 className="text-xl font-bold text-[#333F4A] dark:text-white mb-3">
-              بیمه تمام خطر بین‌المللی
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-              از لحظه تحویل در بنادر امارات تا پارک در منطقه آزاد، سرمایه شما
-              تحت پوشش معتبرترین بیمه‌نامه‌های دریایی قرار دارد.
-            </p>
-          </div>
-
-          <div className={`${glassStyle} flex flex-col justify-center`}>
-            <div className="text-4xl mb-4">⚡</div>
-            <h3 className="text-xl font-bold text-[#333F4A] dark:text-white mb-3">
-              تشریفات گمرکی فوق‌سریع
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-              تیم متخصص مستقر در گمرک، تمامی مراحل اداری و تاییدیه‌های RTA را در
-              کوتاه‌ترین زمان ممکن به انجام می‌رساند.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ----------------- پایانه‌های استراتژیک امارات ----------------- */}
-      <section className="py-20 bg-white/50 dark:bg-[#333F4A]/20 border-y border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold text-[#333F4A] dark:text-white mb-3">
-              پایانه‌های استراتژیک
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              حضور فعال در کلیدی‌ترین بنادر تجاری امارات.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className={`${glassStyle} group`}>
-              <h3 className="text-xl font-bold text-[#333F4A] dark:text-white mb-1">
-                دبی (جبل علی)
-              </h3>
-              <h4 className="text-xs font-bold text-[#FF8C00] mb-4 font-en">
-                Jebel Ali Port
-              </h4>
-              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                بزرگترین هاب تجاری منطقه مناسب برای بارگیری ایمن کانتینری
-                سوپرکارهای خاص.
-              </p>
-            </div>
-
-            <div className={`${glassStyle} group border-[#FF8C00]/30`}>
-              <h3 className="text-xl font-bold text-[#333F4A] dark:text-white mb-1">
-                شارجه (پورت خالد)
-              </h3>
-              <h4 className="text-xs font-bold text-[#FF8C00] mb-4 font-en">
-                Port Khalid
-              </h4>
-              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                کوتاه‌ترین مسیر دریایی تا بنادر جنوبی ایران برای کاهش چشمگیر
-                زمان ترانزیت.
-              </p>
-            </div>
-
-            <div className={`${glassStyle} group`}>
-              <h3 className="text-xl font-bold text-[#333F4A] dark:text-white mb-1">
-                ابوظبی (خلیفه)
-              </h3>
-              <h4 className="text-xs font-bold text-[#FF8C00] mb-4 font-en">
-                Khalifa Port
-              </h4>
-              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                شاهراه کاملاً اتوماتیک و مدرن برای مدیریت هوشمند خودروهای صفر
-                کیلومتر سفارشی.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ----------------- نظرات کاربران ----------------- */}
-      <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-extrabold text-[#333F4A] dark:text-white mb-3">
-            دیدگاه مشتریان
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            تجربه همکاری با کار اکسپرس از زبان مالکان خودرو.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          <div className={glassStyle}>
-            <div className="flex gap-1 text-[#FF8C00] mb-3">★★★★★</div>
-            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-6 font-light">
-              "فکر نمی‌کردم واردات ماشین تا این حد حساب‌شده و شفاف باشد. روند
-              کار فوق‌العاده حرفه‌ای پیش رفت."
-            </p>
-            <h4 className="font-bold text-[#333F4A] dark:text-white text-sm">
-              امیرحسین راد
-            </h4>
-            <span className="text-xs text-gray-400 font-en">Porsche Macan</span>
-          </div>
-
-          <div className={glassStyle}>
-            <div className="flex gap-1 text-[#FF8C00] mb-3">★★★★★</div>
-            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-6 font-light">
-              "تیم ترخیص بسیار سریع عمل کرد و ماشین دقیقاً در موعد مقرر تحویل
-              داده شد. به شدت توصیه می‌کنم."
-            </p>
-            <h4 className="font-bold text-[#333F4A] dark:text-white text-sm">
-              محمد تهرانی
-            </h4>
-            <span className="text-xs text-gray-400 font-en">BMW 7 Series</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ----------------- فوتر رسمی و شرکتی ----------------- */}
-      <footer className="bg-white dark:bg-navyDeep border-t border-gray-200 dark:border-gray-800 pt-16 pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
-            <div>
-              <span className="font-['Outfit'] font-extrabold text-2xl tracking-wide text-[#333F4A] dark:text-white block mb-2">
-                Car<span className="text-[#FF8C00]">Express</span>
+            <source src="/assets/videos/hero.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(12,29,42,.94),rgba(12,29,42,.48)_52%,rgba(12,29,42,.2))]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,160,122,.3),transparent_28%)]" />
+          <div className="relative z-10 mx-auto grid w-full max-w-7xl items-end gap-10 px-5 sm:px-8 lg:grid-cols-[1.15fr_.85fr] lg:gap-20">
+            <div className="max-w-2xl text-right text-white">
+              <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-bold backdrop-blur-md">
+                <span className="h-2 w-2 rounded-full bg-[#ffad7a]" /> ترانزیت
+                مطمئن از امارات
               </span>
-              <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm">
-                سامانه تخصصی واردات و لجستیک ایمن خودرو از امارات به مناطق آزاد.
+              <h1 className="text-4xl font-extrabold leading-[1.25] tracking-tight sm:text-6xl">
+                مسیر خودرویتان،
+                <br />
+                <span className="text-[#ffad7a]">شفاف و سریع.</span>
+              </h1>
+              <p className="mt-6 max-w-xl text-base leading-8 text-white/75 sm:text-lg">
+                کار اکسپرس، تجربه‌ای دقیق و آرام از خرید، حمل، ترخیص و تحویل
+                خودروی شما در مناطق آزاد ایران.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => navigate("/tracking")}
+                  className="flex items-center gap-2 rounded-full bg-[#e85d3f] px-6 py-3.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#d94b31]"
+                >
+                  پیگیری محموله <ArrowLeft size={18} />
+                </button>
+                <a
+                  href="#services"
+                  className="rounded-full border border-white/25 bg-white/10 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20"
+                >
+                  آشنایی با خدمات
+                </a>
+              </div>
+            </div>
+            <div className={`${glass} hidden text-white lg:block`}>
+              <p className="text-xs font-bold uppercase tracking-[.2em] text-[#ffbf9d]">
+                The express standard
+              </p>
+              <p className="mt-5 text-2xl font-bold leading-relaxed">
+                هر خودرو، با یک مسیر اختصاصی و قابل پیگیری.
+              </p>
+              <div className="mt-7 flex items-center gap-3 border-t border-white/20 pt-5 text-sm text-white/70">
+                <Check size={17} className="text-[#ffbf9d]" /> بیمه و نظارت در
+                تمام مسیر
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative z-20 mx-auto -mt-9 max-w-7xl px-5 sm:px-8">
+          <div
+            className={`${glass} grid grid-cols-1 gap-7 py-6 sm:grid-cols-3`}
+          >
+            {stats.map(([number, suffix, label]) => (
+              <div
+                key={label}
+                className="border-b border-[#1c2b38]/10 text-center last:border-0 sm:border-b-0 sm:border-l sm:last:border-l-0 sm:first:border-l-0"
+              >
+                <strong className="font-en text-3xl font-extrabold text-[#e85d3f]">
+                  <AnalogCounter end={number} suffix={suffix} />
+                </strong>
+                <p className="mt-1 text-sm font-bold text-[#526473] dark:text-slate-300">
+                  {label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="services" className="mx-auto max-w-7xl px-5 py-24 sm:px-8">
+          <div className="mb-12 max-w-xl">
+            <span className="font-en text-xs font-bold uppercase tracking-[.2em] text-[#e85d3f]">
+              Our promise
+            </span>
+            <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
+              آرامش، بخشی از سرویس ماست.
+            </h2>
+            <p className="mt-4 leading-8 text-[#526473] dark:text-slate-400">
+              جزئیات مهم را مدیریت می‌کنیم تا شما فقط از رسیدن خودرو لذت ببرید.
+            </p>
+          </div>
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className={glass}>
+              <ShieldCheck size={34} className="text-[#e85d3f]" />
+              <h3 className="mt-6 text-xl font-extrabold">
+                بیمه تمام‌خطر بین‌المللی
+              </h3>
+              <p className="mt-3 leading-8 text-[#526473] dark:text-slate-400">
+                از لحظه تحویل در بنادر امارات تا تحویل نهایی، سرمایه شما تحت
+                پوشش و نظارت است.
               </p>
             </div>
-            <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400 font-en">
-              <span>+971 50 123 4567</span>
-              <span>•</span>
-              <span>support@carexpress.ir</span>
+            <div className={glass}>
+              <Zap size={34} className="text-[#e85d3f]" />
+              <h3 className="mt-6 text-xl font-extrabold">
+                ترخیص سریع و تخصصی
+              </h3>
+              <p className="mt-3 leading-8 text-[#526473] dark:text-slate-400">
+                تیم مستقر ما تمام مراحل اداری و تاییدیه‌ها را دقیق و کوتاه انجام
+                می‌دهد.
+              </p>
             </div>
           </div>
-          <div className="border-t border-gray-100 dark:border-gray-800 pt-6 text-center text-xs text-gray-400 font-['Outfit']">
-            © 2026 CarExpress. All rights reserved.
+        </section>
+
+        <section className="border-y border-white/70 bg-white/25 py-24 dark:border-white/10 dark:bg-white/[.03]">
+          <div className="mx-auto max-w-7xl px-5 sm:px-8">
+            <div className="mb-12 text-center">
+              <span className="font-en text-xs font-bold uppercase tracking-[.2em] text-[#e85d3f]">
+                Our network
+              </span>
+              <h2 className="mt-3 text-3xl font-extrabold">
+                پایانه‌های استراتژیک
+              </h2>
+            </div>
+            <div className="grid gap-5 md:grid-cols-3">
+              {ports.map(([title, englishTitle, description, image]) => (
+                <div
+                  key={title}
+                  className={`${glass} group overflow-hidden p-0 transition hover:-translate-y-1`}
+                >
+                  <div className="relative h-44 overflow-hidden">
+                    <img src={image} alt={title} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#102238]/70 to-transparent" />
+                  </div>
+                  <div className="p-7">
+                    <Anchor size={24} className="text-[#e85d3f]" />
+                    <h3 className="mt-6 text-xl font-extrabold">{title}</h3>
+                    <p className="mt-1 font-en text-xs font-bold text-[#e85d3f]" dir="ltr">
+                      {englishTitle}
+                    </p>
+                    <p className="mt-4 text-sm leading-7 text-[#526473] dark:text-slate-400">
+                      {description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="border-t border-gray-100 dark:border-gray-800 pt-6 text-center text-xs text-gray-400 font-['Outfit']">
-            Design And Develop By QuadByte
+        </section>
+
+        <section className="mx-auto max-w-7xl px-5 py-24 sm:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-extrabold">اعتماد، از زبان مشتریان</h2>
+          </div>
+          <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
+            {testimonials.map(([name, car, quote]) => (
+              <div key={name} className={glass}>
+                <div className="mb-5 text-[#e85d3f]">★★★★★</div>
+                <p className="leading-8 text-[#526473] dark:text-slate-300">
+                  «{quote}»
+                </p>
+                <p className="mt-6 font-bold">{name}</p>
+                <p className="font-en text-xs text-[#e85d3f]">{car}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-white/70 bg-white/35 py-12 dark:border-white/10 dark:bg-slate-950/30">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 text-sm text-[#526473] sm:px-8 md:flex-row md:items-center md:justify-between dark:text-slate-400">
+          <div>
+            <strong className="font-en text-xl text-[#1c2b38] dark:text-white">
+              Car<span className="text-[#e85d3f]">Express</span>
+            </strong>
+            <p className="mt-2">سامانه تخصصی واردات و لجستیک ایمن خودرو</p>
+          </div>
+          <div className="font-en">
+            +971 50 123 4567 &nbsp; • &nbsp; support@carexpress.ir
           </div>
         </div>
       </footer>
