@@ -1,8 +1,9 @@
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import AdminUser, Shipment
+from .models import AdminUser, Shipment, ShipmentDocument
 
 
 class TrackingApiTests(APITestCase):
@@ -48,6 +49,35 @@ class TrackingApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["steps"][2]["status"], "completed")
         self.assertEqual(response.data["steps"][3]["status"], "current")
+
+    def test_admin_can_save_optional_stage_date(self):
+        self.client.force_authenticate(self.admin)
+        response = self.client.patch(
+            f"/api/admin/shipments/{self.shipment.id}/",
+            {"stage_dates": {"2": "2026-08-21T14:30"}},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["steps"][1]["date"], "2026-08-21T14:30")
+        self.assertEqual(response.data["steps"][1]["description"], "2026-08-21T14:30")
+
+    def test_admin_can_delete_shipment_document(self):
+        document = ShipmentDocument.objects.create(
+            shipment=self.shipment,
+            title="RTA",
+            file=SimpleUploadedFile("rta.txt", b"document content"),
+        )
+        file_name = document.file.name
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.delete(
+            f"/api/admin/shipments/{self.shipment.id}/documents/{document.id}/"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(ShipmentDocument.objects.filter(pk=document.id).exists())
+        self.assertFalse(document.file.storage.exists(file_name))
 
     def test_non_staff_cannot_access_management_api(self):
         user = AdminUser.objects.create_user("09121111111", password="password")

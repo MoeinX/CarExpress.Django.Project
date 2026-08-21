@@ -40,6 +40,7 @@ const AdminPanel = () => {
   const [shipments, setShipments] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [stageDates, setStageDates] = useState({});
   const [newFiles, setNewFiles] = useState([{ title: 'فایل RTA', file: null }]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -68,8 +69,8 @@ const AdminPanel = () => {
 
   useEffect(() => { if (token) loadShipments(); }, [token]);
 
-  const openShipment = (shipment) => { clearAlerts(); setSelectedId(shipment.id); setForm(formFromShipment(shipment)); setNewFiles([{ title: 'RTA', file: null }]); setShowForm(true); };
-  const startNew = () => { clearAlerts(); setSelectedId(null); setForm({ ...EMPTY_FORM }); setNewFiles([{ title: 'فایل RTA', file: null }]); setShowForm(true); };
+  const openShipment = (shipment) => { clearAlerts(); setSelectedId(shipment.id); setForm(formFromShipment(shipment)); setStageDates(Object.fromEntries((shipment.steps || []).map((step) => [step.position, step.date || '']))); setNewFiles([{ title: 'RTA', file: null }]); setShowForm(true); };
+  const startNew = () => { clearAlerts(); setSelectedId(null); setStageDates({}); setForm({ ...EMPTY_FORM }); setNewFiles([{ title: 'فایل RTA', file: null }]); setShowForm(true); };
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: field === 'tracking_code' || field === 'build_year' ? normalizeDigits(value) : value }));
   const updateFile = (index, field, value) => setNewFiles((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item));
 
@@ -109,6 +110,14 @@ const AdminPanel = () => {
     if (!selected) return;
     try { await api.patch(`/admin/shipments/${selected.id}/`, { completed_steps: position }); setMessage('وضعیت مراحل ذخیره شد.'); await loadShipments(selected.id); }
     catch (requestError) { setError(getApiError(requestError, 'ذخیره مراحل ناموفق بود.')); }
+  };
+
+  const setStageDate = async (position, value) => {
+    if (!selected) return;
+    const nextDates = { ...stageDates, [position]: value };
+    setStageDates(nextDates);
+    try { await api.patch(`/admin/shipments/${selected.id}/`, { stage_dates: nextDates }); setMessage('تاریخ مرحله ذخیره شد.'); await loadShipments(selected.id); }
+    catch (requestError) { setError(getApiError(requestError, 'ذخیره تاریخ مرحله ناموفق بود.')); }
   };
 
   if (!token) return <main className="flex min-h-screen items-center justify-center bg-[#f4f6f8] px-4 dark:bg-[#091827]">
@@ -237,11 +246,14 @@ const AdminPanel = () => {
 
           {selected && <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-[#12283e]">
             <h2 className="mb-4 text-lg font-extrabold">وضعیت مراحل</h2>
-            <div className="space-y-2">{selected.steps.map((step) => <button type="button" key={step.id} onClick={() => setCompletedThrough(step.position)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-right ${step.status === 'completed' ? 'border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20' : step.status === 'current' ? 'border-[#f36b21] bg-[#f36b21]/5' : 'border-slate-100 dark:border-white/10'}`}>
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 font-outfit text-xs dark:bg-white/10">{step.position}</span>
-              <span className="text-xs font-bold">{step.title}</span>
-              <span className="mr-auto text-[10px] text-slate-400">{step.status === 'completed' ? 'تکمیل شده' : step.status === 'current' ? 'مرحله فعلی' : 'در انتظار'}</span>
-            </button>)}</div>
+            <div className="space-y-2">{selected.steps.map((step) => <div key={step.id} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-right ${step.status === 'completed' ? 'border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20' : step.status === 'current' ? 'border-[#f36b21] bg-[#f36b21]/5' : 'border-slate-100 dark:border-white/10'}`}>
+              <button type="button" onClick={() => setCompletedThrough(step.position)} className="flex min-w-0 flex-1 items-center gap-3 text-right">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 font-outfit text-xs dark:bg-white/10">{step.position}</span>
+                <span className="text-xs font-bold">{step.title}</span>
+                <span className="mr-auto text-[10px] text-slate-400">{step.status === 'completed' ? 'تکمیل شده' : step.status === 'current' ? 'مرحله فعلی' : 'در انتظار'}</span>
+              </button>
+              <input type="datetime-local" value={stageDates[step.position] || ''} onChange={(event) => setStageDate(step.position, event.target.value)} aria-label={`تاریخ و ساعت ${step.title}`} className="w-44 rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs dark:border-white/10 dark:bg-[#0d2034]" />
+            </div>)}</div>
           </div>}
         </> : <div className="flex min-h-80 items-center justify-center rounded-3xl bg-white text-center shadow-lg dark:bg-[#12283e]">
           <div>

@@ -106,6 +106,7 @@ class Shipment(models.Model):
         choices=CompletedSteps.choices,
         default=CompletedSteps.NONE,
     )
+    stage_dates = models.JSONField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

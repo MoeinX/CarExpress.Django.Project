@@ -54,6 +54,7 @@ class ShipmentSerializer(serializers.ModelSerializer):
             "estimated_arrival",
             "customer_note",
             "completed_steps",
+            "stage_dates",
             "is_active",
             "steps",
             "progress",
@@ -110,7 +111,8 @@ class ShipmentSerializer(serializers.ModelSerializer):
                 "id": position,
                 "position": position,
                 "title": title,
-                "description": description,
+                "date": obj.stage_dates.get(str(position), ""),
+                "description": obj.stage_dates.get(str(position), ""),
                 "status": (
                     "completed"
                     if position <= obj.completed_steps
