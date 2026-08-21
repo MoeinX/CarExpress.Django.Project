@@ -18,8 +18,8 @@ STANDARD_TRACKING_STEPS = (
 
 
 phone_number_validator = RegexValidator(
-    regex=r"^\+?\d{10,15}$",
-    message="Enter a valid phone number containing 10 to 15 digits.",
+    regex=r"^(0\d{10}|9\d{9})$",
+    message="Enter a valid Iranian phone number (11 digits starting with 0 or 10 digits starting with 9).",
 )
 
 
