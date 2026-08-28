@@ -8,31 +8,25 @@ from django.utils import timezone
 
 TRACKING_STEPS_I18N = {
     "fa": (
-        ("تایید مدارک و RTA", "دفتر امارات"),
-        ("ورود به بندر مبدأ", "شارجه / دبی"),
-        ("ترخیص و بارگیری", "کشتی و لنج"),
-        ("در مسیر دریایی", "خلیج فارس"),
-        ("ورود به گمرک", "بندرعباس / لنگه"),
-        ("انتقال با خودروبَر", "به سمت منطقه آزاد"),
-        ("پارک در پارکینگ", "تحویل نهایی"),
+        ("تحویل و بارگیری در پورت راشد (دبی)", "پورت راشد دبی - امارات"),
+        ("در مسیر ترانزیت دریایی", "آب‌های خلیج فارس / شناور ترابری"),
+        ("ورود به بندر مقصد (در انتظار تخلیه)", "تخلیه نشده / لنگرگاه و محوطه گمرک"),
+        ("تخلیه کامل و ترخیص از شناور", "تخلیه شده / انبار و تشریفات بندری"),
+        ("بارگیری و انتقال با خودروبَر به مقصد", "ماشین روی خودروبَر / حمل زمینی"),
     ),
     "ar": (
-        ("تأكيد المستندات و RTA", "مكتب الإمارات"),
-        ("الوصول إلى ميناء المغادرة", "الشارقة / دبي"),
-        ("التخليص والتحميل", "سفينة ولنش"),
-        ("في المسار البحري", "الخليج العربي"),
-        ("الوصول إلى الجمارك", "بندر عباس / لنكه"),
-        ("النقل بسطحة السيارات", "باتجاه المنطقة الحرة"),
-        ("الوقوف في المواقف", "التسليم النهائي"),
+        ("الاستلام والتحميل في ميناء راشد (دبي)", "ميناء راشد - دبي"),
+        ("في مسار الترانزيت البحري", "مياه الخليج العربي / سفينة الشحن"),
+        ("الوصول إلى ميناء الوجهة (بانتظار التفريغ)", "غير مفرغة / المرفأ الجمركي"),
+        ("تفريغ وتخليص الشحنة من السفينة", "تم التفريغ / المستودعات الجمركية"),
+        ("التحميل والانطلاق بالسطحة نحو الوجهة", "السيارة على السطحة / النقل البري"),
     ),
     "en": (
-        ("RTA & Document Verification", "UAE Office"),
-        ("Arrival at Origin Port", "Sharjah / Dubai"),
-        ("Customs Clearance & Loading", "Ship & Vessel"),
-        ("Maritime Transit", "Persian Gulf"),
-        ("Arrival at Customs", "Bandar Abbas / Lengeh"),
-        ("Car Carrier Transfer", "Towards Free Zone"),
-        ("Parking Lot Arrival", "Final Delivery"),
+        ("Port Rashid Handover & Loading (Dubai)", "Port Rashid, Dubai UAE"),
+        ("Maritime Transit in Progress", "Persian Gulf Waters / Cargo Vessel"),
+        ("Port Arrival (Pending Discharge)", "Undischarged / Customs Dock"),
+        ("Discharged & Customs Cleared", "Discharged / Port Terminal"),
+        ("Loaded on Car Carrier for Final Dispatch", "On Vehicle Carrier / Land Transit"),
     ),
 }
 
@@ -106,13 +100,11 @@ class AdminUser(AbstractBaseUser, PermissionsMixin):
 class Shipment(models.Model):
     class CompletedSteps(models.IntegerChoices):
         NONE = 0, "هیچ مرحله‌ای تکمیل نشده"
-        DOCUMENTS = 1, "تایید مدارک و RTA"
-        ORIGIN_PORT = 2, "ورود به بندر مبدأ"
-        LOADING = 3, "ترخیص و بارگیری"
-        AT_SEA = 4, "در مسیر دریایی"
-        CUSTOMS = 5, "ورود به گمرک"
-        VEHICLE_TRANSFER = 6, "انتقال با خودروبَر"
-        DELIVERED = 7, "پارک در پارکینگ / تحویل نهایی"
+        PORT_RASHID = 1, "تحویل و بارگیری در پورت راشد (دبی)"
+        SEA_TRANSIT = 2, "در مسیر ترانزیت دریایی"
+        PORT_ARRIVAL = 3, "ورود به بندر مقصد (در انتظار تخلیه)"
+        DISCHARGED = 4, "تخلیه کامل و ترخیص از شناور"
+        CAR_CARRIER = 5, "بارگیری و انتقال با خودروبَر به مقصد"
 
     tracking_code = models.CharField(max_length=100, unique=True, db_index=True)
     customer_name = models.CharField(max_length=150, blank=True)

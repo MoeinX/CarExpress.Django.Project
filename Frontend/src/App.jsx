@@ -16,7 +16,7 @@ const PageTitle = () => {
       '/tracking': t('titleTracking'),
       '/admin-panel': t('titleAdmin'),
     };
-    document.title = titles[pathname] || 'CarExpress';
+    document.title = titles[pathname] || t('titleHome');
   }, [language, pathname, t]);
 
   return null;
