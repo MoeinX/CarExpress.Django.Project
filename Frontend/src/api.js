@@ -9,6 +9,8 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  const language = localStorage.getItem('language') || 'fa';
+  config.headers['Accept-Language'] = language;
   if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
     config.headers.delete?.('Content-Type');
     delete config.headers['Content-Type'];

@@ -6,19 +6,26 @@
 
 @layer base {
   body {
-    /* اضافه شدن فونت پیش‌فرض و جهت راست‌به‌چپ */
-    @apply font-['Vazirmatn'] bg-slate-50 text-slate-900 transition-colors duration-300;
+    @apply bg-slate-50 text-slate-900 transition-colors duration-300 font-['Vazirmatn'];
     direction: rtl;
   }
 
-  html[lang='en'] body,
-  html[lang='en'] body * {
+  html[lang='fa'] body,
+  html[lang='ar'] body {
+    @apply font-['Vazirmatn'];
+    direction: rtl;
+  }
+
+  html[lang='en'] body {
+    @apply font-['Outfit'];
     direction: ltr;
-    unicode-bidi: plaintext;
+  }
+
+  html[lang='en'] [dir='ltr'] {
+    direction: ltr;
   }
   
   html.dark body {
-    /* اکنون bg-navyDeep بدون ارور کار خواهد کرد */
     @apply bg-navyDeep text-slate-100;
   }
 }

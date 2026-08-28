@@ -3,26 +3,21 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import HomePage from './pages/HomePage';
 import TrackingPage from './pages/TrackingPage';
 import AdminPanel from './pages/AdminPanel';
-import { LanguageProvider, LanguageSwitcher, useLanguage } from './components/LanguageContext';
-
-const pageTitles = {
-  '/': 'CarExpress | ترانزیت و لجستیک خودرو',
-  '/tracking': 'رهگیری خودرو | CarExpress',
-  '/admin-panel': 'پنل مدیریت | CarExpress',
-};
+import { LanguageProvider, useLanguage } from './components/LanguageContext';
+import LanguageSwitcher from './components/LanguageSwitcher';
 
 const PageTitle = () => {
   const { pathname } = useLocation();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   useEffect(() => {
     const titles = {
-      fa: pageTitles,
-      en: { '/': 'CarExpress | Vehicle Logistics', '/tracking': 'Vehicle Tracking | CarExpress', '/admin-panel': 'Admin Panel | CarExpress' },
-      ar: { '/': 'CarExpress | نقل ولوجستيات السيارات', '/tracking': 'تتبع السيارة | CarExpress', '/admin-panel': 'لوحة الإدارة | CarExpress' },
+      '/': t('titleHome'),
+      '/tracking': t('titleTracking'),
+      '/admin-panel': t('titleAdmin'),
     };
-    document.title = titles[language][pathname] || 'CarExpress';
-  }, [language, pathname]);
+    document.title = titles[pathname] || 'CarExpress';
+  }, [language, pathname, t]);
 
   return null;
 };
@@ -32,7 +27,7 @@ export default function App() {
     <LanguageProvider>
       <Router>
         <PageTitle />
-        <div className="fixed bottom-4 left-4 z-[60] rounded-full border border-white/30 bg-slate-900/75 p-1 text-white shadow-xl backdrop-blur-xl">
+        <div className="fixed bottom-5 start-5 z-[60]">
           <LanguageSwitcher />
         </div>
         <Routes>

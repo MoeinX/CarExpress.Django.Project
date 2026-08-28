@@ -3,7 +3,12 @@ from django.db import transaction
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import STANDARD_TRACKING_STEPS, Shipment, ShipmentDocument
+from .models import (
+    STANDARD_TRACKING_STEPS,
+    TRACKING_STEPS_I18N,
+    Shipment,
+    ShipmentDocument,
+)
 
 
 def normalize_digits(value):
@@ -102,17 +107,36 @@ class ShipmentSerializer(serializers.ModelSerializer):
             self._create_documents(instance, request)
         return instance
 
+    def _get_language(self):
+        request = self.context.get("request")
+        if not request:
+            return "fa"
+        lang = getattr(request, "query_params", {}).get("lang") if hasattr(request, "query_params") else None
+        if not lang and hasattr(request, "GET"):
+            lang = request.GET.get("lang")
+        if lang and lang.lower() in ("fa", "ar", "en"):
+            return lang.lower()
+        accept_lang = getattr(request, "headers", {}).get("Accept-Language") if hasattr(request, "headers") else request.META.get("HTTP_ACCEPT_LANGUAGE", "")
+        if accept_lang:
+            code = accept_lang.split(",")[0].split(";")[0].split("-")[0].strip().lower()
+            if code in ("fa", "ar", "en"):
+                return code
+        return "fa"
+
     def get_progress(self, obj):
         return round((obj.completed_steps / len(STANDARD_TRACKING_STEPS)) * 100)
 
     def get_steps(self, obj):
+        lang = self._get_language()
+        steps_def = TRACKING_STEPS_I18N.get(lang, TRACKING_STEPS_I18N["fa"])
         return [
             {
                 "id": position,
                 "position": position,
                 "title": title,
+                "default_description": description,
                 "date": obj.stage_dates.get(str(position), ""),
-                "description": obj.stage_dates.get(str(position), ""),
+                "description": obj.stage_dates.get(str(position), "") or description,
                 "status": (
                     "completed"
                     if position <= obj.completed_steps
@@ -122,13 +146,15 @@ class ShipmentSerializer(serializers.ModelSerializer):
                 ),
             }
             for position, (title, description) in enumerate(
-                STANDARD_TRACKING_STEPS,
+                steps_def,
                 start=1,
             )
         ]
 
     def get_current_step(self, obj):
         steps = self.get_steps(obj)
+        if not steps:
+            return None
         if obj.completed_steps >= len(steps):
             return steps[-1]
         return steps[obj.completed_steps]

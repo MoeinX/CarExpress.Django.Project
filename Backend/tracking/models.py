@@ -6,15 +6,37 @@ from django.db import models
 from django.utils import timezone
 
 
-STANDARD_TRACKING_STEPS = (
-    ("تایید مدارک و RTA", "دفتر امارات"),
-    ("ورود به بندر مبدأ", "شارجه / دبی"),
-    ("ترخیص و بارگیری", "کشتی و لنج"),
-    ("در مسیر دریایی", "خلیج فارس"),
-    ("ورود به گمرک", "بندرعباس / لنگه"),
-    ("انتقال با خودروبَر", "به سمت منطقه آزاد"),
-    ("پارک در پارکینگ", "تحویل نهایی"),
-)
+TRACKING_STEPS_I18N = {
+    "fa": (
+        ("تایید مدارک و RTA", "دفتر امارات"),
+        ("ورود به بندر مبدأ", "شارجه / دبی"),
+        ("ترخیص و بارگیری", "کشتی و لنج"),
+        ("در مسیر دریایی", "خلیج فارس"),
+        ("ورود به گمرک", "بندرعباس / لنگه"),
+        ("انتقال با خودروبَر", "به سمت منطقه آزاد"),
+        ("پارک در پارکینگ", "تحویل نهایی"),
+    ),
+    "ar": (
+        ("تأكيد المستندات و RTA", "مكتب الإمارات"),
+        ("الوصول إلى ميناء المغادرة", "الشارقة / دبي"),
+        ("التخليص والتحميل", "سفينة ولنش"),
+        ("في المسار البحري", "الخليج العربي"),
+        ("الوصول إلى الجمارك", "بندر عباس / لنكه"),
+        ("النقل بسطحة السيارات", "باتجاه المنطقة الحرة"),
+        ("الوقوف في المواقف", "التسليم النهائي"),
+    ),
+    "en": (
+        ("RTA & Document Verification", "UAE Office"),
+        ("Arrival at Origin Port", "Sharjah / Dubai"),
+        ("Customs Clearance & Loading", "Ship & Vessel"),
+        ("Maritime Transit", "Persian Gulf"),
+        ("Arrival at Customs", "Bandar Abbas / Lengeh"),
+        ("Car Carrier Transfer", "Towards Free Zone"),
+        ("Parking Lot Arrival", "Final Delivery"),
+    ),
+}
+
+STANDARD_TRACKING_STEPS = TRACKING_STEPS_I18N["fa"]
 
 
 phone_number_validator = RegexValidator(

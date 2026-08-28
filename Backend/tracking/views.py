@@ -55,3 +55,20 @@ class ShipmentViewSet(viewsets.ModelViewSet):
         document.file.delete(save=False)
         document.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TranslationsView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request, lang=None):
+        from .models import TRACKING_STEPS_I18N
+
+        data = {
+            "languages": [
+                {"code": "fa", "name": "فارسی", "dir": "rtl"},
+                {"code": "ar", "name": "العربية", "dir": "rtl"},
+                {"code": "en", "name": "English", "dir": "ltr"},
+            ],
+            "steps": TRACKING_STEPS_I18N,
+        }
+        return Response(data)
